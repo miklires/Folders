@@ -82,6 +82,17 @@ Compiles `core/` and the test suite against gson, slf4j and JUnit from Maven
 Central and runs them on a plain JVM. It fetches those four jars on first run.
 `./gradlew test` runs the same sources once the toolchain is reachable.
 
+### Finding vanilla signatures
+
+```bash
+./gradlew dumpApi        # -> build/api.txt
+```
+
+Dumps the signatures of every vanilla class Folders hooks into, using the exact
+remapped jar Gradle already resolved. Worth running after any version bump: the
+selection lists and their entry classes are where this mod is fragile, and
+reading the real signatures is faster than discovering them one crash at a time.
+
 ### Textures
 
 `tools/GenerateTextures.java` draws every texture in the mod:

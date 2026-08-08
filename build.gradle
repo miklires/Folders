@@ -93,6 +93,69 @@ jar {
     }
 }
 
+/**
+ * Dumps the signatures of the vanilla classes this mod hooks into, to
+ * build/api.txt.
+ *
+ * Folders lives on a handful of Minecraft internals whose names move between
+ * versions, and guessing them costs a crash per guess. This asks Gradle for the
+ * exact remapped jar it already resolved -- no hunting through the Loom cache --
+ * and runs javap over it. Re-run it after any version bump:
+ *
+ *     ./gradlew dumpApi
+ */
+tasks.register("dumpApi") {
+    description = "Writes signatures of the vanilla classes Folders hooks into to build/api.txt"
+    def classpath = sourceSets.client.compileClasspath
+    def target = layout.buildDirectory.file("api.txt")
+
+    doLast {
+        def names = [
+                "net.minecraft.client.gui.components.AbstractSelectionList",
+                "net.minecraft.client.gui.components.ObjectSelectionList",
+                "net.minecraft.client.gui.screens.worldselection.SelectWorldScreen",
+                "net.minecraft.client.gui.screens.worldselection.WorldSelectionList",
+                "net.minecraft.client.gui.screens.worldselection.WorldSelectionList\$Entry",
+                "net.minecraft.client.gui.screens.worldselection.WorldSelectionList\$WorldListEntry",
+                "net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen",
+                "net.minecraft.client.gui.screens.multiplayer.ServerSelectionList",
+                "net.minecraft.client.gui.screens.multiplayer.ServerSelectionList\$Entry",
+                "net.minecraft.client.gui.screens.multiplayer.ServerSelectionList\$OnlineServerEntry",
+                "net.minecraft.client.multiplayer.ServerData",
+                "net.minecraft.client.multiplayer.ServerStatusPinger",
+                "net.minecraft.client.gui.screens.packs.PackSelectionScreen",
+                "net.minecraft.client.gui.screens.packs.PackSelectionModel",
+                "net.minecraft.client.gui.screens.packs.PackSelectionModel\$Entry",
+                "net.minecraft.client.gui.screens.packs.TransferableSelectionList",
+                "net.minecraft.client.gui.screens.packs.TransferableSelectionList\$PackEntry",
+                "net.minecraft.client.gui.GuiGraphicsExtractor",
+                "net.minecraft.client.input.KeyEvent",
+                "net.minecraft.client.input.CharacterEvent",
+                "net.minecraft.client.input.MouseButtonEvent",
+        ]
+
+        def javap = java.util.spi.ToolProvider.findFirst("javap")
+                .orElseThrow { new GradleException("javap is not available in this JDK") }
+
+        def file = target.get().asFile
+        file.parentFile.mkdirs()
+        file.withPrintWriter("UTF-8") { writer ->
+            names.each { name ->
+                writer.println("===== ${name} =====")
+                def buffer = new ByteArrayOutputStream()
+                // javap writes both output and errors here, so a missing class
+                // shows up in the dump instead of vanishing to stderr.
+                new PrintWriter(buffer, true).withCloseable { sink ->
+                    javap.run(sink, sink, "-p", "-cp", classpath.asPath, name)
+                }
+                writer.println(buffer.toString("UTF-8").trim())
+                writer.println()
+            }
+        }
+        logger.lifecycle("Wrote ${file}")
+    }
+}
+
 // configure the maven publication
 publishing {
     publications {
