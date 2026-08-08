@@ -40,9 +40,18 @@ Before the first build, work through [Mapping checklist](#mapping-checklist).
 ./gradlew runClient      # test in-game
 ```
 
+Use the wrapper, not the IDE's bundled Gradle. It is pinned to 9.6.1 because
+Loom `1.17-SNAPSHOT` is a moving target: recent snapshots declare a plugin API
+version that Gradle 9.0 rejects outright, and the failure reads as an
+unresolvable artifact rather than a version mismatch. In IntelliJ, set
+*Build tools → Gradle → Use Gradle from: gradle-wrapper.properties*.
+
 Versions in `gradle.properties` match ChatUtils: Minecraft `26.2`, loader
 `0.19.3`, Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Java 25, Mojang
 mappings (no `mappings` dependency — Loom defaults to them).
+
+The Gradle JVM should be 21 or newer; the Java 25 toolchain is fetched by
+Gradle if the selected JDK is older.
 
 ### Verifying the core without Minecraft
 

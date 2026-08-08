@@ -1,4 +1,4 @@
-# gradle
+# gradle (the wrapper is committed on purpose: it pins the Gradle version Loom needs)
 .gradle/
 build/
 out/
