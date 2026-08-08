@@ -1,0 +1,43 @@
+{
+  "folders.create": "Создать папку",
+  "folders.create.tooltip": "Добавляет пустую папку в этот список. Перетащите в неё миры, серверы или паки.",
+  "folders.default_name": "Новая папка",
+
+  "folders.empty": "Пусто",
+  "folders.drop_here": "Перетащите сюда",
+  "folders.refreshing": "Обновление…",
+  "folders.stats.join": "%s · %s",
+
+  "folders.count.worlds": "Миров: %s",
+  "folders.count.servers": "Серверов: %s",
+  "folders.count.packs": "Паков: %s",
+  "folders.count.online": "Онлайн: %s",
+  "folders.count.enabled": "Включено: %s",
+
+  "folders.menu.expand": "Открыть",
+  "folders.menu.collapse": "Свернуть",
+  "folders.menu.rename": "Переименовать",
+  "folders.menu.icon": "Изменить иконку",
+  "folders.menu.delete": "Удалить папку",
+  "folders.menu.refresh_ping": "Обновить ping",
+  "folders.menu.enable_all": "Включить все",
+  "folders.menu.disable_all": "Отключить все",
+
+  "folders.icon.default": "Стандартная",
+  "folders.icon.choose": "Выбрать PNG",
+  "folders.icon.reset": "Сбросить",
+
+  "folders.state.expanded": "открыта",
+  "folders.state.collapsed": "закрыта",
+  "folders.narration": "%s, папка, %s, %s",
+
+  "folders.tooltip.left_click": "ЛКМ — открыть",
+  "folders.tooltip.right_click": "ПКМ — действия",
+
+  "folders.settings.title": "Папки",
+  "folders.settings.animations": "Анимации",
+  "folders.settings.animation_speed": "Скорость анимации",
+  "folders.settings.show_statistics": "Показывать статистику",
+  "folders.settings.show_online_indicator": "Показывать индикатор онлайна",
+  "folders.settings.show_tooltips": "Показывать подсказки"
+}

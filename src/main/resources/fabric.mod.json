@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "folders",
+  "version": "${version}",
+  "name": "Folders",
+  "description": "Folders for worlds, servers and resource packs, inside the vanilla screens. Client-side only; no vanilla file is ever modified.",
+  "authors": [
+    "miklires"
+  ],
+  "contact": {
+    "sources": "https://github.com/miklires/folders"
+  },
+  "license": "MIT",
+  "icon": "assets/folders/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "dev.miklires.folders.FoldersClient"
+    ]
+  },
+  "mixins": [
+    {
+      "config": "folders.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

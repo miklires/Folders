@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.miklires.folders.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "client": [
+    "EntryListWidgetAccessor",
+    "EntryListWidgetMixin",
+    "world.SelectWorldScreenMixin",
+    "world.WorldEntryAccessor",
+    "world.WorldListWidgetMixin",
+    "server.MultiplayerScreenAccessor",
+    "server.MultiplayerScreenMixin",
+    "server.MultiplayerServerListWidgetMixin",
+    "server.ServerEntryAccessor",
+    "pack.PackListWidgetMixin",
+    "pack.PackScreenMixin",
+    "pack.ResourcePackEntryAccessor"
+  ],
+  "mixins": [],
+  "server": []
+}
