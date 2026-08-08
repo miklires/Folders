@@ -1,0 +1,29 @@
+# gradle
+.gradle/
+build/
+out/
+classes/
+
+# idea
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# eclipse / vscode
+.settings/
+.metadata
+.classpath
+.project
+bin/
+.vscode/
+
+# macos
+.DS_Store
+
+# fabric
+run/
+remappedSrc/
+
+# local verification scratch (see README, "Verifying the core")
+.verify/
