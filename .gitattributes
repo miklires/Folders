@@ -1,0 +1,12 @@
+# Normalise line endings so a Windows checkout does not show every file as
+# modified and block a pull. Sources are stored with LF and checked out with LF;
+# the Gradle wrapper batch file is the one thing Windows needs as CRLF.
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+gradlew text eol=lf
+
+*.png binary
+*.jar binary
