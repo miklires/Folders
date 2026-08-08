@@ -10,13 +10,10 @@
     "requireAnnotations": true
   },
   "client": [
-    "AbstractSelectionListAccessor",
     "AbstractSelectionListMixin",
     "JoinMultiplayerScreenMixin",
-    "OnlineServerEntryAccessor",
     "SelectWorldScreenMixin",
     "ServerSelectionListMixin",
-    "WorldListEntryAccessor",
     "WorldSelectionListMixin"
   ]
 }

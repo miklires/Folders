@@ -69,7 +69,11 @@ public abstract class FolderListController<E> {
     protected FolderListController(FolderType type) {
         this.type = type;
         this.repository = Folders.repository(type);
-        this.viewModel = new FolderViewModel(repository, FoldersConfig.get());
+        // Expansion is applied instantly for now. The accordion needs per-row heights, and
+        // AbstractSelectionList positions rows itself in 26.2 -- animating them means driving the
+        // entry's own height rather than overriding the list's arithmetic, which is the next piece
+        // of work. Half an animation with fixed row heights would just look broken.
+        this.viewModel = new FolderViewModel(repository, baseMs -> 0L);
     }
 
     // ------------------------------------------------------------------
@@ -122,6 +126,10 @@ public abstract class FolderListController<E> {
     public List<E> buildEntries(List<E> vanillaEntries, boolean complete) {
         vanillaById.clear();
         for (E entry : vanillaEntries) {
+            if (entry instanceof FolderRow) {
+                // A rebuild hands back the children from the previous pass, folder rows included.
+                continue;
+            }
             String id = idOf(entry);
             if (id != null) {
                 vanillaById.putIfAbsent(id, entry);
@@ -149,39 +157,15 @@ public abstract class FolderListController<E> {
         }
         folderEntries.keySet().retainAll(live);
 
-        // Entries Minecraft has that no row claimed (a resolver returned null, say)
-        // are appended rather than silently hidden.
+        // Entries Minecraft has that no row claimed -- a loading header, or one whose resolver
+        // returned null -- are appended rather than silently hidden. Folder rows are excluded:
+        // they are already placed, and re-adding them is how a folder would multiply.
         for (E entry : vanillaEntries) {
-            if (!out.contains(entry)) {
+            if (!(entry instanceof FolderRow) && !out.contains(entry)) {
                 out.add(entry);
             }
         }
         return out;
-    }
-
-    /** Row geometry for the list mixin. */
-    public FolderRowLayout layout() {
-        return new FolderRowLayout() {
-            @Override
-            public int rowCount() {
-                return rows.size();
-            }
-
-            @Override
-            public int rowTop(int index) {
-                return index >= 0 && index < rows.size() ? rows.get(index).y() : index * viewModel.rowHeight();
-            }
-
-            @Override
-            public int rowHeight(int index) {
-                return index >= 0 && index < rows.size() ? rows.get(index).height() : viewModel.rowHeight();
-            }
-
-            @Override
-            public int contentHeight() {
-                return viewModel.totalHeight();
-            }
-        };
     }
 
     public List<DisplayRow> rows() {

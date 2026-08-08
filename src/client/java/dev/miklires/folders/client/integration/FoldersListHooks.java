@@ -41,14 +41,16 @@ public final class FoldersListHooks {
             children.clear();
             children.addAll((List<Object>) (List<?>) ordered);
 
-            ((FoldersListAccess) widget).folders$setLayout(controller.layout());
         });
     }
 
     /** Advances animations and refreshes drop targets. Call at the head of render. */
     public static void beforeRender(AbstractSelectionList<?> widget, FolderListController<?> controller) {
+        // Scroll offset is passed as 0: AbstractSelectionList exposes setScrollAmount but no
+        // confirmed getter, and the only consumer is drop-target hit testing, which is not wired
+        // up yet. It becomes real the moment drag does.
         Folders.guarded("updating folder animations", () ->
-                controller.tick(widget.getRowLeft(), widget.getY(), widget.getRowWidth(), widget.scrollAmount()));
+                controller.tick(widget.getRowLeft(), widget.getY(), widget.getRowWidth(), 0.0));
     }
 
     /** Ghost preview and context menu, drawn above the list. Call at the tail of render. */

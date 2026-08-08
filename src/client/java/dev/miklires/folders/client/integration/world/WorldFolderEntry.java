@@ -2,6 +2,7 @@ package dev.miklires.folders.client.integration.world;
 
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.client.integration.FolderEntryDelegate;
+import dev.miklires.folders.client.integration.FolderRow;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import net.minecraft.client.input.CharacterEvent;
@@ -18,7 +19,7 @@ import net.minecraft.network.chat.Component;
  * geometry is read back off {@code this}. That is why nothing here caches a position between the
  * draw and the click.
  */
-public final class WorldFolderEntry extends WorldSelectionList.Entry {
+public final class WorldFolderEntry extends WorldSelectionList.Entry implements FolderRow {
 
     private final FolderEntryDelegate delegate;
     private final WorldSelectionList list;
@@ -28,6 +29,7 @@ public final class WorldFolderEntry extends WorldSelectionList.Entry {
         this.list = list;
     }
 
+    @Override
     public Folder folder() {
         return delegate.folder();
     }

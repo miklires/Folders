@@ -1,10 +1,10 @@
 package dev.miklires.folders.client.integration.server;
 
+import dev.miklires.folders.client.config.FoldersConfig;
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.core.data.FolderType;
 import dev.miklires.folders.client.identity.ServerIdentityResolver;
 import dev.miklires.folders.client.integration.FolderListController;
-import dev.miklires.folders.mixin.client.OnlineServerEntryAccessor;
 import dev.miklires.folders.client.ui.FolderRowRenderer;
 import dev.miklires.folders.client.ui.FolderStats;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
@@ -44,14 +44,14 @@ public final class ServerListIntegration extends FolderListController<ServerSele
         // ScanEntry (LAN discovery) and LanScanEntry have no ServerData and are
         // passed through as ordinary rows.
         if (entry instanceof ServerSelectionList.OnlineServerEntry serverEntry) {
-            return ((OnlineServerEntryAccessor) serverEntry).folders$serverData();
+            return serverEntry.getServerData();
         }
         return null;
     }
 
     @Override
     protected FolderStats statsFor(Folder folder) {
-        return FolderStats.of(countPresent(folder));
+        return FolderStats.of(countPresent(folder), countOnline(folder));
     }
 
     @Override
@@ -59,26 +59,40 @@ public final class ServerListIntegration extends FolderListController<ServerSele
         return "folders.count.servers";
     }
 
-    /**
-     * No second figure while the online state is unknown; "Online: 0" on a folder full of live
-     * servers would be a lie, and an empty column is honest.
-     */
     @Override
     protected String highlightKey() {
-        return null;
+        return "folders.count.online";
     }
 
     /**
-     * The online dot, currently never shown.
+     * Whether a server answered its last ping.
      *
-     * <p>{@code ServerData} in 26.2 exposes neither the {@code online} flag nor the {@code ping}
-     * field this used to read, and the replacements were not identifiable without the mappings to
-     * hand. A dot that reports an invented state is worse than no dot, so it stays dark until the
-     * real field is known; the plumbing above it is unchanged and one method restores it.
+     * <p>26.2 dropped the {@code online} flag but kept {@code ping}, which is what the dot actually
+     * means: a round trip completed. It stays 0 until a status response arrives and goes negative
+     * when one fails, so a positive value is the honest test.
      */
+    private static boolean isOnline(ServerData info) {
+        return info != null && info.ping > 0L;
+    }
+
+    private int countOnline(Folder folder) {
+        int online = 0;
+        for (ServerSelectionList.Entry entry : presentEntries(folder)) {
+            if (isOnline(infoOf(entry))) {
+                online++;
+            }
+        }
+        return online;
+    }
+
     @Override
     protected FolderRowRenderer.OnlineState onlineStateFor(Folder folder) {
-        return FolderRowRenderer.OnlineState.NONE;
+        if (!FoldersConfig.get().showOnlineIndicator || folder.isEmpty()) {
+            return FolderRowRenderer.OnlineState.NONE;
+        }
+        return countOnline(folder) > 0
+                ? FolderRowRenderer.OnlineState.ONLINE
+                : FolderRowRenderer.OnlineState.UNKNOWN;
     }
 
     @Override

@@ -4,9 +4,9 @@ import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.core.data.FolderType;
 import dev.miklires.folders.client.identity.WorldIdentityResolver;
 import dev.miklires.folders.client.integration.FolderListController;
-import dev.miklires.folders.mixin.client.WorldListEntryAccessor;
 import dev.miklires.folders.client.ui.FolderStats;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
+import net.minecraft.world.level.storage.LevelSummary;
 
 /**
  * Folders in the singleplayer world list.
@@ -29,20 +29,15 @@ public final class WorldListIntegration extends FolderListController<WorldSelect
 
     @Override
     protected String idOf(WorldSelectionList.Entry entry) {
-        if (!(entry instanceof WorldSelectionList.WorldListEntry worldEntry)) {
-            // LoadingEntry and the "no worlds" placeholder have no identity; they
-            // are passed through untouched.
-            return null;
-        }
-        return WorldIdentityResolver.idOf(((WorldListEntryAccessor) (Object) worldEntry).folders$summary());
+        // Entry.getLevelSummary() is null for the loading header and the "no worlds" placeholder,
+        // which is exactly the rows that have no identity and should pass through untouched.
+        return WorldIdentityResolver.idOf(entry.getLevelSummary());
     }
 
     @Override
     protected String displayNameOf(WorldSelectionList.Entry entry) {
-        if (entry instanceof WorldSelectionList.WorldListEntry worldEntry) {
-            return ((WorldListEntryAccessor) (Object) worldEntry).folders$summary().getLevelName();
-        }
-        return "";
+        LevelSummary summary = entry.getLevelSummary();
+        return summary == null ? "" : summary.getLevelName();
     }
 
     @Override

@@ -33,22 +33,25 @@ few lines as possible.
 
 ### What is switched off, and why
 
-Three things could not be written against APIs that could be confirmed, so rather
-than ship code that does not compile or a UI that reports invented state, they are
-out:
+- **The expand animation.** 26.2's `AbstractSelectionList` positions rows itself
+  (`getNextY`, `repositionEntries`) and has no `getMaxPosition` to override, so
+  the accordion has to drive each entry's own height instead of the list's
+  arithmetic. Until then folders open and close instantly. The animation code in
+  `core` is unchanged and tested; only the integration bypasses it.
+- **Drag and drop.** Neither selection list overrides `mouseDragged` or
+  `mouseReleased`, so there is nowhere on them to inject. The hook belongs on
+  `AbstractWidget` or the screen, and neither has been checked yet. Until it is,
+  items cannot be put into folders by dragging — which is currently the only way
+  in, so this is the next thing worth doing.
+- **Resource pack folders.** Now unblocked by `dumpApi`:
+  `TransferableSelectionList.PackEntry` is an inner class constructed as
+  `list.new PackEntry(minecraft, list, pack)`, `PackSelectionModel.Entry` is a
+  known interface, and `updateList` is the rebuild hook. Not yet rewritten.
+- **"Refresh ping".** `ServerStatusPinger.pingServer` takes an
+  `EventLoopGroupHolder` this mod has no clean way to obtain.
 
-- **Resource pack folders.** `TransferableSelectionList.PackEntry` is a non-static
-  inner class, and `TransferableSelectionList` is not an
-  `ObjectSelectionList<PackEntry>`, so neither the row nor the list mixin could be
-  written blind. Everything else about packs — identity by profile id, the shared
-  repository, the JSON — is designed and unchanged; it needs the entry class
-  shape and the list's rebuild hook to come back.
-- **The online dot and the online count.** `ServerData` no longer exposes
-  `online` or `ping`. `onlineStateFor` returns `NONE` until the replacement is
-  known; one method restores it.
-- **"Refresh ping".** `ServerStatusPinger.add` does not take
-  `(ServerData, Runnable, Runnable)`. The bounded-concurrency coordinator that
-  drove it was deleted rather than left dead.
+The online dot and count are back: 26.2 dropped `ServerData.online` but kept
+`ping`, which is what the dot actually means.
 
 ---
 

@@ -2,6 +2,7 @@ package dev.miklires.folders.client.integration.server;
 
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.client.integration.FolderEntryDelegate;
+import dev.miklires.folders.client.integration.FolderRow;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.input.CharacterEvent;
@@ -13,7 +14,7 @@ import net.minecraft.network.chat.Component;
  * A folder inside the multiplayer list — a thin shell over {@link FolderEntryDelegate}, like its
  * world and pack siblings.
  */
-public final class ServerFolderEntry extends ServerSelectionList.Entry {
+public final class ServerFolderEntry extends ServerSelectionList.Entry implements FolderRow {
 
     private final FolderEntryDelegate delegate;
     private final ServerSelectionList list;
@@ -23,6 +24,7 @@ public final class ServerFolderEntry extends ServerSelectionList.Entry {
         this.list = list;
     }
 
+    @Override
     public Folder folder() {
         return delegate.folder();
     }
