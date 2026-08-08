@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.server;
+package dev.miklires.folders.mixin.client;
 
 import dev.miklires.folders.Folders;
 import dev.miklires.folders.client.ui.CreateFolderButton;
@@ -15,13 +15,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Adds "Create folder" to the multiplayer screen. Add, edit, delete, join and the
  * direct-connect flow are all untouched.
  *
- * <p>MAPPING NOTE: {@code serverListWidget} is the Yarn field name.
+ * <p>The list field is {@code serverSelectionList}.
  */
 @Mixin(JoinMultiplayerScreen.class)
 public abstract class JoinMultiplayerScreenMixin extends Screen {
 
     @Shadow
-    protected ServerSelectionList serverListWidget;
+    private ServerSelectionList serverSelectionList;
 
     private JoinMultiplayerScreenMixin() {
         super(null);
@@ -30,7 +30,7 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
     @Inject(method = "init", at = @At("TAIL"))
     private void folders$addCreateButton(CallbackInfo info) {
         Folders.guarded("adding the Create folder button", () -> addRenderableWidget(
-                CreateFolderButton.create(serverListWidget,
+                CreateFolderButton.create(serverSelectionList,
                         this.width / 2 - 154,
                         this.height - 28 - 24,
                         CreateFolderButton.DEFAULT_WIDTH,

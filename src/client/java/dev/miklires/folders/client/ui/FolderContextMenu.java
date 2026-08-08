@@ -77,7 +77,7 @@ public final class FolderContextMenu {
                 GuiCompat.fill(graphics, x + 1, rowY - 1, x + width - 1, rowY + ROW_HEIGHT - 2, HOVER);
             }
             GuiCompat.trimmedText(graphics, item.label(), x + PADDING, rowY, width - PADDING * 2,
-                    item.enabled() ? LABEL : LABEL_DISABLED, false);
+                    item.enabled() ? LABEL : LABEL_DISABLED);
         }
         GuiCompat.popLayer(graphics);
     }

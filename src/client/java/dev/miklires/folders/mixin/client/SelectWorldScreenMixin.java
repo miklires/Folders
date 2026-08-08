@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.world;
+package dev.miklires.folders.mixin.client;
 
 import dev.miklires.folders.Folders;
 import dev.miklires.folders.client.ui.CreateFolderButton;

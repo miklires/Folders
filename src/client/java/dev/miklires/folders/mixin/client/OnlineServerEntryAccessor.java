@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.server;
+package dev.miklires.folders.mixin.client;
 
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.multiplayer.ServerData;
@@ -8,11 +8,11 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 /**
  * Reaches the {@link ServerData} behind a server row, for host+port identity.
  *
- * <p>MAPPING NOTE: the field is {@code server} in Yarn.
+ * The field is {@code serverData}.
  */
 @Mixin(ServerSelectionList.OnlineServerEntry.class)
 public interface OnlineServerEntryAccessor {
 
-    @Accessor("server")
-    ServerData folders$server();
+    @Accessor("serverData")
+    ServerData folders$serverData();
 }

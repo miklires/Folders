@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.server;
+package dev.miklires.folders.mixin.client;
 
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.multiplayer.ServerStatusPinger;

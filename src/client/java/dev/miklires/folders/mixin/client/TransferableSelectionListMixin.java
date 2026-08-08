@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.pack;
+package dev.miklires.folders.mixin.client;
 
 import dev.miklires.folders.client.integration.FolderListController;
 import dev.miklires.folders.client.integration.FoldersControllerHost;

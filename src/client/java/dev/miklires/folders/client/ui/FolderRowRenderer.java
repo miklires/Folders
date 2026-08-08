@@ -72,11 +72,11 @@ public final class FolderRowRenderer {
         int textWidth = Math.max(0, width - TEXT_OFFSET_X - 4);
 
         GuiCompat.trimmedText(graphics, Component.literal(row.folder().name()), textX, y + 1, textWidth,
-                GuiCompat.fade(NAME_COLOR, row.alpha()), false);
+                GuiCompat.fade(NAME_COLOR, row.alpha()));
 
         Component subtitle = row.stats().describe(row.countKey(), row.highlightKey(), row.dropTarget());
         GuiCompat.trimmedText(graphics, subtitle, textX, y + 12, textWidth,
-                GuiCompat.fade(STATS_COLOR, row.alpha()), false);
+                GuiCompat.fade(STATS_COLOR, row.alpha()));
     }
 
     /**

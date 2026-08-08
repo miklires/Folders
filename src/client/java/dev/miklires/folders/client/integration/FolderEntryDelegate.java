@@ -176,6 +176,11 @@ public final class FolderEntryDelegate {
         }
     }
 
+    /** Open or close, as the keyboard and a double click both mean. */
+    public void activate(int viewportBottom) {
+        controller.toggle(folder, viewportBottom);
+    }
+
     public boolean charTyped(char chr, int modifiers) {
         return controller.isRenaming(folder.id()) && renameField().charTyped(chr, modifiers);
     }

@@ -36,7 +36,7 @@ public final class GuiCompat {
     }
 
     public static int width(Component text) {
-        return font().width(text.getVisualOrderText());
+        return font().width(text);
     }
 
     /** Solid rectangle. {@code color} is ARGB. */
@@ -75,21 +75,21 @@ public final class GuiCompat {
         return ARGB.color(a, ARGB.red(argb), ARGB.green(argb), ARGB.blue(argb));
     }
 
-    public static void text(GuiGraphicsExtractor graphics, Component text, int x, int y, int color, boolean shadow) {
-        graphics.text(font(), text.getVisualOrderText(), x, y, color, shadow);
+    public static void text(GuiGraphicsExtractor graphics, Component text, int x, int y, int color) {
+        graphics.text(font(), text.getVisualOrderText(), x, y, color);
     }
 
     /** Draws text truncated with an ellipsis, so a long folder name never bleeds past its row. */
     public static void trimmedText(GuiGraphicsExtractor graphics, Component text, int x, int y, int maxWidth,
-                                   int color, boolean shadow) {
+                                   int color) {
         Font font = font();
         FormattedCharSequence visual = text.getVisualOrderText();
         if (font.width(visual) <= maxWidth) {
-            graphics.text(font, visual, x, y, color, shadow);
+            graphics.text(font, visual, x, y, color);
             return;
         }
         String trimmed = font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - font.width("...")));
-        graphics.text(font, trimmed + "...", x, y, color, shadow);
+        graphics.text(font, Component.literal(trimmed + "...").getVisualOrderText(), x, y, color);
     }
 
     /**

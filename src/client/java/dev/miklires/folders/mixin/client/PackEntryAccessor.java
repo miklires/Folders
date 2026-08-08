@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.pack;
+package dev.miklires.folders.mixin.client;
 
 import net.minecraft.client.gui.screens.packs.TransferableSelectionList;
 import net.minecraft.client.gui.screens.packs.PackSelectionModel;
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 /**
  * Reaches the pack behind a resource pack row, for profile-id identity.
  *
- * <p>MAPPING NOTE: the field is {@code pack} in Yarn.
+ * The field is {@code pack}.
  */
 @Mixin(TransferableSelectionList.PackEntry.class)
 public interface PackEntryAccessor {

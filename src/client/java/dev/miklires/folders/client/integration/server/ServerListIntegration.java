@@ -61,7 +61,7 @@ public final class ServerListIntegration extends FolderListController<ServerSele
         // ScanEntry (LAN discovery) and LanScanEntry have no ServerData and are
         // passed through as ordinary rows.
         if (entry instanceof ServerSelectionList.OnlineServerEntry serverEntry) {
-            return ((OnlineServerEntryAccessor) serverEntry).folders$server();
+            return ((OnlineServerEntryAccessor) serverEntry).folders$serverData();
         }
         return null;
     }

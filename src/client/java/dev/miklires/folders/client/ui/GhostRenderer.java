@@ -43,7 +43,7 @@ public final class GhostRenderer {
         GuiCompat.pushLayer(graphics, LAYER);
         GuiCompat.fill(graphics, x, y, x + width, y + height, BACKGROUND);
         GuiCompat.outline(graphics, x, y, width, height, BORDER);
-        GuiCompat.text(graphics, label, x + PADDING, y + PADDING, TEXT, false);
+        GuiCompat.text(graphics, label, x + PADDING, y + PADDING, TEXT);
         GuiCompat.popLayer(graphics);
     }
 }

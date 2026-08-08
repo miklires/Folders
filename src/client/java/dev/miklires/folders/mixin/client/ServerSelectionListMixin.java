@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.server;
+package dev.miklires.folders.mixin.client;
 
 import dev.miklires.folders.client.integration.FolderListController;
 import dev.miklires.folders.client.integration.FoldersControllerHost;
@@ -20,10 +20,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Connects the multiplayer list to Folders.
  *
- * <p>MAPPING NOTE: {@code setServers(ServerList)} is the Yarn name of the method
- * that rebuilds the rows after a server is added, edited, deleted or moved. It is
- * the single hook that keeps folders in step with {@code servers.dat} without
- * Folders ever writing to it.
+ * <p>{@code refreshEntries} rebuilds the rows after a server is added, edited, deleted or moved.
+ * Injecting at its tail keeps folders in step with {@code servers.dat} without Folders ever writing
+ * to it, and leaves LAN discovery and the network rows exactly as vanilla built them.
  */
 @Mixin(ServerSelectionList.class)
 public abstract class ServerSelectionListMixin
@@ -58,8 +57,8 @@ public abstract class ServerSelectionListMixin
         FoldersListHooks.applyEntries(this, folders$integration(), complete);
     }
 
-    @Inject(method = "setServers", at = @At("TAIL"))
-    private void folders$afterSetServers(CallbackInfo info) {
+    @Inject(method = "refreshEntries", at = @At("TAIL"))
+    private void folders$afterRefreshEntries(CallbackInfo info) {
         folders$apply(true);
     }
 

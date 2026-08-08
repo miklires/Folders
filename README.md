@@ -218,22 +218,22 @@ retried every frame.
 
 ## Mapping checklist
 
-Everything below is written against Mojang 26.2 names. The ones ChatUtils
-already exercises (`GuiGraphicsExtractor`, `MouseButtonEvent`, `RenderPipelines`,
-`Identifier`, `ARGB`) are confirmed; the selection lists are not. Grep for
-`MAPPING NOTE`.
+The world and server sides have since been checked against working 26.2 code
+and corrected: the row hook is `extractContent(GuiGraphicsExtractor, mouseX,
+mouseY, hovered, delta)` with the entry reporting its own bounds, the accessor
+fields are `summary` / `serverData` / `pack`, and the rebuild hooks are
+`fillLevels` and `refreshEntries`. What is left unverified is the pack list and
+the variable-height mixin. Grep for `MAPPING NOTE`.
 
 | File | What to check | If wrong |
 |---|---|---|
 | `mixin/client/AbstractSelectionListMixin` | `getRowTop`, `getMaxPosition`, `getEntryAtPosition`, and vanilla's row-top formula | Rows misplaced, clicks land on the wrong row |
-| entry classes | the `Entry` render hook — 26.2 may extract a render state here too rather than take a draw call | Folder rows do not draw |
-| `WorldListEntryAccessor` | field `level`; `getLevelId` is the **directory**, `getLevelName` the title | Folders keyed on display name |
-| `OnlineServerEntryAccessor` | field `server`; `ServerData.ip`, `.online` | No server identity, no online dot |
-| `PackEntryAccessor` | field `pack`; `PackSelectionModel.Entry.getId` is the **profile id** | Packs keyed on display name |
-| `JoinMultiplayerScreenAccessor` | field `serverListPinger`, and `ServerStatusPinger.add(...)`'s arity | "Refresh ping" does nothing |
-| `FolderPackStub` | `PackSelectionModel.Entry` still an interface, and its full method set | Folder rows cannot exist in the pack list |
-| screen mixins | `levelList`, `serverListWidget`, `availablePackList`; the `show` / `setServers` rebuild hooks | No button, or the list never rebuilds |
-| `GuiCompat` | `enableScissor` / `pose` on the extractor | Rows spill past their band; overlays draw under the list |
+| `integration/pack/PackFolderEntry` | the `TransferableSelectionList.PackEntry` constructor | Folder rows cannot exist in the pack list |
+| `integration/pack/FolderPackStub` | `PackSelectionModel.Entry` still an interface, and its full method set | Same |
+| `mixin/client/TransferableSelectionListMixin` | the rebuild hook — the world and server equivalents turned out to be `fillLevels` and `refreshEntries`, so this one is likely not `render` either | Pack folders never appear |
+| `mixin/client/PackSelectionScreenMixin` | field `availablePackList` | No button on the pack screen |
+| `mixin/client/JoinMultiplayerScreenAccessor` | field `serverListPinger`, and `ServerStatusPinger.add(...)`'s arity | "Refresh ping" does nothing |
+| `ui/GuiCompat` | `enableScissor` / `pose()` on the extractor | Rows spill past their band; overlays draw under the list |
 
 `FolderPackStub` deserves a second look. `PackListWidget` is an
 `EntryListWidget<ResourcePackEntry>`, so every row must be a pack entry and every

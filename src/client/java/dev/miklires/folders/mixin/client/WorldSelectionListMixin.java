@@ -1,4 +1,4 @@
-package dev.miklires.folders.mixin.world;
+package dev.miklires.folders.mixin.client;
 
 import dev.miklires.folders.client.integration.FolderListController;
 import dev.miklires.folders.client.integration.FoldersControllerHost;
@@ -7,8 +7,11 @@ import dev.miklires.folders.client.integration.world.WorldListIntegration;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
+import net.minecraft.world.level.storage.LevelSummary;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import org.spongepowered.asm.mixin.Mixin;
+
+import java.util.List;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,9 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Connects the world list to Folders. All it does is forward events.
  *
- * <p>MAPPING NOTE: {@code show(List)} is the Yarn name of the method that fills
- * the list once the saves have been read off disk. If it is renamed, this is the
- * only injection that needs updating for worlds.
+ * <p>{@code fillLevels} is the method that rebuilds the rows once the saves have been read off
+ * disk, and it re-runs on every search keystroke, so it is the one hook folders need here.
  */
 @Mixin(WorldSelectionList.class)
 public abstract class WorldSelectionListMixin extends ObjectSelectionList<WorldSelectionList.Entry>
@@ -47,9 +49,9 @@ public abstract class WorldSelectionListMixin extends ObjectSelectionList<WorldS
         FoldersListHooks.applyEntries(this, folders$integration(), complete);
     }
 
-    /** The saves are on screen, so the snapshot is complete and orphans can go. */
-    @Inject(method = "show", at = @At("TAIL"))
-    private void folders$afterShow(CallbackInfo info) {
+    /** The saves are on screen, so the snapshot is complete and orphaned references can go. */
+    @Inject(method = "fillLevels", at = @At("TAIL"))
+    private void folders$afterFillLevels(String search, List<LevelSummary> levels, CallbackInfo info) {
         folders$apply(true);
     }
 

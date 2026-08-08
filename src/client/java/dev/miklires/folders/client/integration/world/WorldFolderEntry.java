@@ -3,31 +3,27 @@ package dev.miklires.folders.client.integration.world;
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.client.integration.FolderEntryDelegate;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 /**
  * A folder inside the world list. Everything it does lives in
- * {@link FolderEntryDelegate}; this class exists only to be the entry type the
- * vanilla widget expects.
+ * {@link FolderEntryDelegate}; this class only exists to be the entry type the vanilla widget
+ * expects, which is what keeps the mod off any one entry API.
  *
- * <p>MAPPING NOTE: the {@code render} signature of {@code AbstractSelectionList.Entry}
- * changes between versions. If it moves, it moves here and in the two sibling
- * entry classes, and nowhere else.
+ * <p>26.2 hands rows no bounds: the list has already placed the entry by the time it draws, so the
+ * geometry is read back off {@code this}. That is why nothing here caches a position between the
+ * draw and the click.
  */
 public final class WorldFolderEntry extends WorldSelectionList.Entry {
 
     private final FolderEntryDelegate delegate;
-    private final WorldSelectionList widget;
+    private final WorldSelectionList list;
 
-    /** Captured during render so mouse handlers know where the row was drawn. */
-    private int lastX;
-    private int lastY;
-
-    public WorldFolderEntry(WorldListIntegration integration, WorldSelectionList widget, Folder folder) {
+    public WorldFolderEntry(WorldListIntegration integration, WorldSelectionList list, Folder folder) {
         this.delegate = new FolderEntryDelegate(integration, folder);
-        this.widget = widget;
+        this.list = list;
     }
 
     public Folder folder() {
@@ -35,21 +31,20 @@ public final class WorldFolderEntry extends WorldSelectionList.Entry {
     }
 
     @Override
-    public void render(GuiGraphicsExtractor graphics, int index, int y, int x, int entryWidth, int entryHeight,
-                       int mouseX, int mouseY, boolean hovered, float tickDelta) {
-        this.lastX = x;
-        this.lastY = y;
-        delegate.render(graphics, x, y, entryWidth, entryHeight, mouseX, mouseY, hovered);
+    public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
+                               boolean hovered, float delta) {
+        delegate.render(graphics, getX(), getContentY(), getContentWidth(), getContentHeight(),
+                mouseX, mouseY, hovered);
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
-        return delegate.mouseClicked(click, doubled, lastX, lastY, widget.getBottom());
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubleClick) {
+        return delegate.mouseClicked(click, doubleClick, getX(), getContentY(), list.getBottom());
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return delegate.keyPressed(keyCode, scanCode, modifiers, widget.getBottom())
+        return delegate.keyPressed(keyCode, scanCode, modifiers, list.getBottom())
                 || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -61,5 +56,13 @@ public final class WorldFolderEntry extends WorldSelectionList.Entry {
     @Override
     public Component getNarration() {
         return delegate.narration();
+    }
+
+    /**
+     * World rows are closeable because a real one holds an open level icon texture. A folder row
+     * owns nothing the list allocated, so there is nothing to release.
+     */
+    @Override
+    public void close() {
     }
 }
