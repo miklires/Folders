@@ -5,13 +5,13 @@ import dev.miklires.folders.core.data.FolderType;
 import java.util.Locale;
 
 /**
- * Builds the stable ids folders store (§6).
+ * Builds the stable ids folders store.
  *
  * <p>Kept out of the Minecraft-facing resolvers on purpose: the rules for what
  * counts as "the same server" are worth testing, and they should not change when
  * the mappings do.
  *
- * <p>Never index-based, never name-based (§77.8, §77.9).
+ * <p>Never index-based, never name-based.
  */
 public final class ItemIdentity {
 
@@ -52,7 +52,7 @@ public final class ItemIdentity {
 
     /**
      * A server is identified by host and port only, so renaming it in the
-     * multiplayer screen keeps it in its folder (§6).
+     * multiplayer screen keeps it in its folder.
      */
     public static String server(String address) {
         HostPort parsed = parseAddress(address);
@@ -125,7 +125,7 @@ public final class ItemIdentity {
     /**
      * A resource pack is identified by its profile id — the pack source, e.g.
      * {@code file/shaders.zip} — not its display name, so two packs that happen to
-     * call themselves the same thing stay distinct (§6).
+     * call themselves the same thing stay distinct.
      */
     public static String resourcePack(String profileId) {
         if (profileId == null || profileId.isBlank()) {

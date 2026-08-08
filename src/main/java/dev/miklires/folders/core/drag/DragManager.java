@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The one drag-and-drop implementation, shared by all three screens (§15).
+ * The one drag-and-drop implementation, shared by all three screens.
  *
  * <p>It owns nothing Minecraft-shaped: screens feed it pointer events and a list
  * of {@link DropTarget}s, and it answers "is this a drag yet?", "what is under
@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 public final class DragManager {
 
-    /** §16: below this the gesture is still a click. */
+    /**: below this the gesture is still a click. */
     public static final double DRAG_THRESHOLD = 5.0;
 
     private DragState state = DragState.IDLE;
@@ -103,7 +103,7 @@ public final class DragManager {
         return true;
     }
 
-    /** Escape, or the screen closing mid-drag (§40). */
+    /** Escape, or the screen closing mid-drag. */
     public void cancel() {
         if (state != DragState.IDLE) {
             state = DragState.CANCELLED;
@@ -168,7 +168,7 @@ public final class DragManager {
         return Optional.ofNullable(payload);
     }
 
-    /** The target that would receive a drop right now, for the highlight in §17. */
+    /** The target that would receive a drop right now, for the highlight in */
     public Optional<DropTarget> hoveredTarget() {
         return Optional.ofNullable(hovered);
     }

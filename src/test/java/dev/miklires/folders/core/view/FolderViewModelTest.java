@@ -3,7 +3,7 @@ package dev.miklires.folders.core.view;
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.core.data.FolderRepository;
 import dev.miklires.folders.core.data.FolderType;
-import dev.miklires.folders.core.storage.FoldersSettings;
+import dev.miklires.folders.core.view.AnimationSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,14 +20,24 @@ class FolderViewModelTest {
 
     private static final int ROW = 36;
 
+    /** Stands in for the client config, which lives on the other side of the Minecraft boundary. */
+    private static final class TestSettings implements AnimationSettings {
+        boolean animations = true;
+
+        @Override
+        public long scaledDuration(long baseMs) {
+            return animations ? baseMs : 0L;
+        }
+    }
+
     private FolderRepository repository;
-    private FoldersSettings settings;
+    private TestSettings settings;
     private FolderViewModel model;
 
     @BeforeEach
     void setUp() {
         repository = FolderRepository.empty(FolderType.WORLDS);
-        settings = new FoldersSettings();
+        settings = new TestSettings();
         model = new FolderViewModel(repository, settings);
         model.setRowHeight(ROW);
         model.setChildIndent(12);
@@ -51,12 +61,12 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("an open folder shows its children indented, below it (§29)")
+    @DisplayName("an open folder shows its children indented, below it")
     void openFolderShowsIndentedChildren() {
         repository.sync(List.of("world:a", "world:b"), true);
         Folder folder = repository.createFolder("F");
         repository.moveToFolder("world:a", folder.id(), -1);
-        settings.setAnimations(false);
+        settings.animations = false;
         model.setExpanded(folder.id(), true);
 
         List<DisplayRow> rows = model.layout(available("world:a", "world:b"));
@@ -76,7 +86,7 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("mid-animation the list is part-way open, not snapped (§26)")
+    @DisplayName("mid-animation the list is part-way open, not snapped")
     void animationProducesIntermediateHeights() {
         repository.sync(List.of("world:a", "world:b", "world:c"), true);
         Folder folder = repository.createFolder("F");
@@ -100,7 +110,7 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("children entering the reveal band fade in (§27)")
+    @DisplayName("children entering the reveal band fade in")
     void childrenFadeIn() {
         repository.sync(List.of("world:a", "world:b"), true);
         Folder folder = repository.createFolder("F");
@@ -142,13 +152,13 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("a deleted world is left out of the layout rather than drawn broken (§58)")
+    @DisplayName("a deleted world is left out of the layout rather than drawn broken")
     void missingItemsAreSkipped() {
         repository.sync(List.of("world:a", "world:b"), true);
         Folder folder = repository.createFolder("F");
         repository.moveToFolder("world:a", folder.id(), -1);
         repository.moveToFolder("world:b", folder.id(), -1);
-        settings.setAnimations(false);
+        settings.animations = false;
         model.setExpanded(folder.id(), true);
 
         List<DisplayRow> rows = model.layout(available("world:a"));
@@ -158,10 +168,10 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("an empty open folder adds no rows, it just says so on its own line (§38)")
+    @DisplayName("an empty open folder adds no rows, it just says so on its own line")
     void emptyFolderAddsNoRows() {
         Folder folder = repository.createFolder("F");
-        settings.setAnimations(false);
+        settings.animations = false;
         model.setExpanded(folder.id(), true);
 
         assertEquals(1, model.layout(Set.of()).size());
@@ -169,7 +179,7 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("settledHeight predicts where the list will end up, for scroll correction (§28)")
+    @DisplayName("settledHeight predicts where the list will end up, for scroll correction")
     void settledHeightIgnoresAnimation() {
         repository.sync(List.of("world:a", "world:b"), true);
         Folder folder = repository.createFolder("F");
@@ -191,7 +201,7 @@ class FolderViewModelTest {
         repository.sync(List.of("world:a"), true);
         Folder folder = repository.createFolder("F");
         repository.moveToFolder("world:a", folder.id(), -1);
-        settings.setAnimations(false);
+        settings.animations = false;
 
         model.tick(0L);
         model.setExpanded(folder.id(), true);
@@ -202,7 +212,7 @@ class FolderViewModelTest {
     }
 
     @Test
-    @DisplayName("expanded state is persisted through the repository (§59)")
+    @DisplayName("expanded state is persisted through the repository")
     void toggleWritesThroughToTheModel() {
         Folder folder = repository.createFolder("F");
         repository.markClean();

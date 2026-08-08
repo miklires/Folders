@@ -2,7 +2,6 @@ package dev.miklires.folders.core;
 
 import dev.miklires.folders.core.data.FolderRepository;
 import dev.miklires.folders.core.data.FolderType;
-import dev.miklires.folders.core.storage.FoldersSettings;
 import dev.miklires.folders.core.storage.JsonStorage;
 
 import java.nio.file.Path;
@@ -10,32 +9,26 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * Everything persistent the mod owns, in one place: the three repositories, the
- * settings, and the storage that backs them.
+ * The three folder repositories and the storage that backs them.
  *
- * <p>Saving is driven by the dirty flag, so calling {@link #saveIfDirty()} after
- * an operation or on screen close is cheap and calling it in a loop is harmless
- * (§51). Nothing here is called during rendering.
+ * <p>Saving is driven by the dirty flag, so calling {@link #saveIfDirty()} after an operation or on
+ * screen close is cheap and calling it in a loop is harmless. Nothing here runs while the game is
+ * drawing: the write itself happens on the storage thread.
  */
 public final class FoldersData implements AutoCloseable {
 
     private final JsonStorage storage;
-    private final FoldersSettings settings;
-    private final Path settingsFile;
     private final Map<FolderType, FolderRepository> repositories = new EnumMap<>(FolderType.class);
 
-    private FoldersData(JsonStorage storage, FoldersSettings settings, Path settingsFile) {
+    private FoldersData(JsonStorage storage) {
         this.storage = storage;
-        this.settings = settings;
-        this.settingsFile = settingsFile;
     }
 
     /** @param configDirectory usually {@code .minecraft/config} */
     public static FoldersData load(Path configDirectory) {
         Path root = configDirectory.resolve("folders");
         JsonStorage storage = new JsonStorage(root);
-        Path settingsFile = root.resolve("settings.json");
-        FoldersData data = new FoldersData(storage, FoldersSettings.load(settingsFile), settingsFile);
+        FoldersData data = new FoldersData(storage);
         for (FolderType type : FolderType.values()) {
             data.repositories.put(type, new FolderRepository(type, storage.load(type)));
         }
@@ -44,10 +37,6 @@ public final class FoldersData implements AutoCloseable {
 
     public FolderRepository repository(FolderType type) {
         return repositories.get(type);
-    }
-
-    public FoldersSettings settings() {
-        return settings;
     }
 
     public JsonStorage storage() {
@@ -70,10 +59,6 @@ public final class FoldersData implements AutoCloseable {
         // so a change arriving after this point correctly marks it dirty again.
         repository.markClean();
         storage.saveAsync(type, repository.config());
-    }
-
-    public void saveSettings() {
-        settings.save(settingsFile);
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.util.UUID;
  * content).
  *
  * <p>The integration layer turns these into whatever entry class the vanilla
- * widget wants. Nothing here knows about Minecraft — that is the point of §45.
+ * widget wants. Nothing here knows about Minecraft — that is the point of
  */
 public sealed interface DisplayRow {
 
@@ -33,7 +33,7 @@ public sealed interface DisplayRow {
 
     /**
      * @param owner        folder this item is displayed inside, or {@code null} at the root
-     * @param indent       horizontal offset in pixels (§29)
+     * @param indent       horizontal offset in pixels
      * @param clipTop      top of the band this row must be scissored to
      * @param clipBottom   bottom of that band; equals {@code y + height} for root rows
      */

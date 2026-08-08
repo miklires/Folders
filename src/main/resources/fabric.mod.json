@@ -3,31 +3,39 @@
   "id": "folders",
   "version": "${version}",
   "name": "Folders",
-  "description": "Folders for worlds, servers and resource packs, inside the vanilla screens. Client-side only; no vanilla file is ever modified.",
+  "description": "Folders for worlds, servers and resource packs, inside the vanilla screens. Drag a world, a server or a pack into a folder, rename it, give it an icon, open and close it with an animation that matches the rest of the game. Grouping lives in its own config file: saves, servers.dat and resourcepacks are never modified. Client-side only.",
   "authors": [
     "miklires"
   ],
   "contact": {
-    "sources": "https://github.com/miklires/folders"
+    "homepage": "https://github.com/miklires/Folders",
+    "sources": "https://github.com/miklires/Folders",
+    "issues": "https://github.com/miklires/Folders/issues"
   },
-  "license": "MIT",
+  "license": "All-Rights-Reserved",
   "icon": "assets/folders/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
-      "dev.miklires.folders.FoldersClient"
+      "dev.miklires.folders.client.FoldersClient"
+    ],
+    "modmenu": [
+      "dev.miklires.folders.client.ModMenuIntegration"
     ]
   },
   "mixins": [
     {
-      "config": "folders.mixins.json",
+      "config": "folders.client.mixins.json",
       "environment": "client"
     }
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",
-    "minecraft": "~${minecraft_version}",
-    "java": ">=21",
-    "fabric-api": "*"
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "yet_another_config_lib_v3": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

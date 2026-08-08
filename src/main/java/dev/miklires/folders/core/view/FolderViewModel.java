@@ -5,7 +5,6 @@ import dev.miklires.folders.core.animation.Easing;
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.core.data.FolderRepository;
 import dev.miklires.folders.core.data.RootEntry;
-import dev.miklires.folders.core.storage.FoldersSettings;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,19 +17,19 @@ import java.util.UUID;
 
 /**
  * Turns the model into a flat list of rows with the accordion animation applied
- * (§26–§29).
+ * (–).
  *
  * <p>The whole animation is one number per folder: how far open it is. Row
  * positions fall out of that, so the list grows and shrinks smoothly without any
- * entry needing its own timer (§66).
+ * entry needing its own timer.
  */
 public final class FolderViewModel {
 
-    /** §67 asks for 150–250 ms. */
+    /** Long enough to read as motion, short enough not to feel like waiting. */
     public static final long EXPAND_DURATION_MS = 200L;
 
     private final FolderRepository repository;
-    private final FoldersSettings settings;
+    private final AnimationSettings settings;
 
     private final Map<UUID, Animation> expansion = new HashMap<>();
 
@@ -41,9 +40,9 @@ public final class FolderViewModel {
     private List<DisplayRow> rows = List.of();
     private int totalHeight;
 
-    public FolderViewModel(FolderRepository repository, FoldersSettings settings) {
+    public FolderViewModel(FolderRepository repository, AnimationSettings settings) {
         this.repository = repository;
-        this.settings = settings;
+        this.settings = settings == null ? AnimationSettings.DEFAULT : settings;
     }
 
     public FolderRepository repository() {
@@ -67,7 +66,7 @@ public final class FolderViewModel {
     // ------------------------------------------------------------------
 
     /**
-     * Advances every running animation using real elapsed time (§67).
+     * Advances every running animation using real elapsed time.
      *
      * @param nowMs a monotonic clock in milliseconds
      * @return true if anything is still moving, i.e. the layout must be rebuilt
@@ -93,7 +92,7 @@ public final class FolderViewModel {
         return false;
     }
 
-    /** Opens or closes a folder, persisting the new state (§59). */
+    /** Opens or closes a folder, persisting the new state. */
     public void toggle(UUID folderId) {
         repository.folder(folderId).ifPresent(folder -> setExpanded(folderId, !folder.expanded()));
     }
@@ -138,7 +137,7 @@ public final class FolderViewModel {
      *
      * @param availableItems ids Minecraft currently has. Anything a folder still
      *                       references but Minecraft has dropped is left out
-     *                       rather than drawn as a broken row (§58).
+     *                       rather than drawn as a broken row.
      */
     public List<DisplayRow> layout(Set<String> availableItems) {
         List<DisplayRow> out = new ArrayList<>();
@@ -218,7 +217,7 @@ public final class FolderViewModel {
     /**
      * Content height the list will settle at once every animation finishes.
      * Used to decide how far to scroll so a folder opening near the bottom edge
-     * brings its contents into view (§28).
+     * brings its contents into view.
      */
     public int settledHeight(Set<String> availableItems) {
         int height = 0;

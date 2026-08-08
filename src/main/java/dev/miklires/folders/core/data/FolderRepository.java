@@ -17,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * In-memory folder model for one {@link FolderType} and the single place where
  * it is mutated.
  *
- * <p>Invariants it maintains, all of them from §9:
+ * <p>Invariants it maintains, all of them:
  * <ul>
  *   <li>an item is either at the root or in exactly one folder, never both and
  *       never in two folders;</li>
@@ -25,8 +25,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *   <li>only ids belonging to this type are ever stored.</li>
  * </ul>
  *
- * <p>No Minecraft types, no file access, no rendering — see §79. Persistence is
- * driven by {@link #isDirty()}; nothing here writes to disk (§50, §51).
+ * <p>No Minecraft types, no file access, no rendering — Persistence is
+ * driven by {@link #isDirty()}; nothing here writes to disk.
  */
 public final class FolderRepository {
     private final FolderType type;
@@ -114,7 +114,7 @@ public final class FolderRepository {
      * Creates a folder at the top of the root list.
      *
      * @param baseName already-localised default name; a numeric suffix is added
-     *                 when that name is taken ("New folder 2", §11).
+     *                 when that name is taken ("New folder 2").
      */
     public Folder createFolder(String baseName) {
         String base = Folder.sanitizeName(baseName);
@@ -146,7 +146,7 @@ public final class FolderRepository {
         return base;
     }
 
-    /** @return false if the name is empty/unusable, in which case nothing changes (§12). */
+    /** @return false if the name is empty/unusable, in which case nothing changes. */
     public boolean renameFolder(UUID id, String newName) {
         Folder folder = folderIndex.get(id);
         if (folder == null) {
@@ -166,8 +166,8 @@ public final class FolderRepository {
 
     /**
      * Deletes a folder. Its items are spliced back into the root at exactly the
-     * position the folder occupied, so nothing jumps to the bottom of the list
-     * (§9, §13). No real world/server/pack is touched.
+     * position the folder occupied, so nothing jumps to the bottom of the list. No real world,
+     * server or pack is touched.
      */
     public boolean deleteFolder(UUID id) {
         Folder folder = folderIndex.remove(id);
@@ -255,7 +255,7 @@ public final class FolderRepository {
         return true;
     }
 
-    /** Repositions a folder among the root tokens (§61). */
+    /** Repositions a folder among the root tokens. */
     public boolean moveFolder(UUID folderId, int rootIndex) {
         if (!folderIndex.containsKey(folderId)) {
             return false;
@@ -272,7 +272,7 @@ public final class FolderRepository {
         return true;
     }
 
-    /** Reorders an item that is already inside {@code folderId} (§19). */
+    /** Reorders an item that is already inside {@code folderId}. */
     public boolean reorderInFolder(UUID folderId, String itemId, int index) {
         Folder folder = folderIndex.get(folderId);
         if (folder == null || !folder.contains(itemId)) {
@@ -303,9 +303,9 @@ public final class FolderRepository {
     // ------------------------------------------------------------------
 
     /**
-     * Reconciles the model with the list Minecraft actually has (§53, §58).
+     * Reconciles the model with the list Minecraft actually has.
      *
-     * <p>Repairs everything §8 asks about: ids in two folders at once, ids of the
+     * <p>Repairs whatever a hand-edited or half-written file threw at it: ids in two folders at once, ids of the
      * wrong type, duplicated root tokens, folders missing from the root order.
      * Items Minecraft knows about but the model has never seen are inserted next
      * to their vanilla neighbour rather than dumped at the bottom, so a freshly

@@ -8,7 +8,7 @@ import java.util.Optional;
  * been copied into {@code config/folders/icons/}.
  *
  * <p>The file name is always derived from the folder UUID by the icon manager,
- * never from the folder name — see §52. This class only carries the name and
+ * never from the folder name — This class only carries the name and
  * refuses anything that looks like a path.
  */
 public final class FolderIcon {

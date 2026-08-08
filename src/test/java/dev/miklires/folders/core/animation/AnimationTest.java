@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AnimationTest {
 
     @Test
-    @DisplayName("progress follows elapsed time, not the number of updates (§67)")
+    @DisplayName("progress follows elapsed time, not the number of updates")
     void frameRateIndependent() {
         Animation slow = new Animation(0.0f, Easing.LINEAR);
         Animation fast = new Animation(0.0f, Easing.LINEAR);

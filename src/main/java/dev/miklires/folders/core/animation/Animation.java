@@ -1,7 +1,7 @@
 package dev.miklires.folders.core.animation;
 
 /**
- * A single scalar driven by elapsed wall time, not by frames (§67).
+ * A single scalar driven by elapsed wall time, not by frames.
  *
  * <p>Retargeting mid-flight restarts from wherever the value currently is, so
  * opening a folder and immediately closing it again eases back from the partial
@@ -32,7 +32,7 @@ public final class Animation {
 
     /**
      * Animates towards {@code target}. A duration of {@code 0} (animations off,
-     * §70) applies the change immediately.
+     *) applies the change immediately.
      */
     public void animateTo(float target, long durationMs) {
         if (Float.compare(target, this.target) == 0 && elapsedMs >= this.durationMs) {

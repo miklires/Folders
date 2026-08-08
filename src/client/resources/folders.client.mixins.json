@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.miklires.folders.mixin.client",
+  "compatibilityLevel": "JAVA_25",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "client": [
+    "AbstractSelectionListAccessor",
+    "AbstractSelectionListMixin",
+    "JoinMultiplayerScreenAccessor",
+    "JoinMultiplayerScreenMixin",
+    "OnlineServerEntryAccessor",
+    "PackEntryAccessor",
+    "PackSelectionScreenMixin",
+    "SelectWorldScreenMixin",
+    "ServerSelectionListMixin",
+    "TransferableSelectionListMixin",
+    "WorldListEntryAccessor",
+    "WorldSelectionListMixin"
+  ]
+}

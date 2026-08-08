@@ -12,7 +12,7 @@ public interface DropTarget {
 
     /**
      * @return false when this payload cannot land here — a folder must not accept
-     *         another folder (no nesting in v1, §10), and no target accepts a
+     *         another folder (no nesting in v1), and no target accepts a
      *         payload of a different {@code FolderType}.
      */
     boolean accepts(DragPayload payload);
@@ -30,7 +30,7 @@ public interface DropTarget {
         return 0;
     }
 
-    /** Whether this target should be highlighted while hovered (§17). */
+    /** Whether this target should be highlighted while hovered. */
     default boolean highlightWhenHovered() {
         return true;
     }

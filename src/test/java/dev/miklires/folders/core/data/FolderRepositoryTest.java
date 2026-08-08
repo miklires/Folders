@@ -40,7 +40,7 @@ class FolderRepositoryTest {
     class Lifecycle {
 
         @Test
-        @DisplayName("repeated creation numbers the default name (§11)")
+        @DisplayName("repeated creation numbers the default name")
         void numbersDuplicateNames() {
             assertEquals("New folder", repository.createFolder("New folder").name());
             assertEquals("New folder 2", repository.createFolder("New folder").name());
@@ -48,7 +48,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("renaming keeps the id and the contents (§5)")
+        @DisplayName("renaming keeps the id and the contents")
         void renameKeepsContents() {
             Folder folder = repository.createFolder("Survival");
             repository.moveToFolder(world("a"), folder.id(), -1);
@@ -61,7 +61,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("an empty or whitespace-only name is rejected (§12)")
+        @DisplayName("an empty or whitespace-only name is rejected")
         void rejectsEmptyName() {
             Folder folder = repository.createFolder("Survival");
             assertFalse(repository.renameFolder(folder.id(), "   "));
@@ -78,7 +78,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("deleting returns the contents to the root, in place (§9, §13)")
+        @DisplayName("deleting returns the contents to the root, in place")
         void deleteReleasesContentsInPlace() {
             repository.sync(List.of(world("before"), world("a"), world("b"), world("after")), true);
             Folder folder = repository.createFolder("Survival");
@@ -100,7 +100,7 @@ class FolderRepositoryTest {
     class Membership {
 
         @Test
-        @DisplayName("an item lives in exactly one folder (§9)")
+        @DisplayName("an item lives in exactly one folder")
         void movingBetweenFoldersDetaches() {
             Folder a = repository.createFolder("A");
             Folder b = repository.createFolder("B");
@@ -139,7 +139,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("ids of another type are refused (§6)")
+        @DisplayName("ids of another type are refused")
         void rejectsForeignIds() {
             Folder folder = repository.createFolder("A");
             assertFalse(repository.moveToFolder("server:example.com:25565", folder.id(), -1));
@@ -148,7 +148,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("items can be reordered inside a folder (§19)")
+        @DisplayName("items can be reordered inside a folder")
         void reorderInsideFolder() {
             Folder folder = repository.createFolder("A");
             repository.moveToFolder(world("a"), folder.id(), -1);
@@ -166,7 +166,7 @@ class FolderRepositoryTest {
     class Sync {
 
         @Test
-        @DisplayName("folders keep their position while new items appear beside their neighbour (§53, §60)")
+        @DisplayName("folders keep their position while new items appear beside their neighbour")
         void keepsOrderAndPlacesNewItems() {
             repository.sync(List.of(world("a"), world("b")), true);
             Folder folder = repository.createFolder("F");
@@ -190,7 +190,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("deleted worlds are pruned from folders (§35, §58)")
+        @DisplayName("deleted worlds are pruned from folders")
         void prunesOrphans() {
             Folder folder = repository.createFolder("F");
             repository.moveToFolder(world("gone"), folder.id(), -1);
@@ -213,7 +213,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("an item listed in two folders is kept only by the first (§8)")
+        @DisplayName("an item listed in two folders is kept only by the first")
         void repairsCrossFolderDuplicate() {
             UUID first = UUID.randomUUID();
             UUID second = UUID.randomUUID();
@@ -230,7 +230,7 @@ class FolderRepositoryTest {
         }
 
         @Test
-        @DisplayName("duplicate folder ids are collapsed (§8)")
+        @DisplayName("duplicate folder ids are collapsed")
         void repairsDuplicateFolderIds() {
             UUID id = UUID.randomUUID();
             FolderConfig config = new FolderConfig(1, List.of(
@@ -274,7 +274,7 @@ class FolderRepositoryTest {
     }
 
     @Nested
-    @DisplayName("dirty tracking (§51)")
+    @DisplayName("dirty tracking")
     class Dirty {
 
         @Test

@@ -29,9 +29,9 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Two rules drive the design:
  * <ul>
- *   <li><b>A broken file never stops the game (§8).</b> Anything unreadable is
+ *   <li><b>A broken file never stops the game.</b> Anything unreadable is
  *       moved aside as a {@code .bak}, logged, and replaced by an empty config.</li>
- *   <li><b>No file IO on the render thread (§50, §77.11).</b> Saves serialise the
+ *   <li><b>No file IO on the render thread.</b> Saves serialise the
  *       model synchronously — cheap, and it snapshots the state before the player
  *       can change it again — then write on a single background thread. One chain
  *       per type means two saves can never interleave or land out of order.</li>

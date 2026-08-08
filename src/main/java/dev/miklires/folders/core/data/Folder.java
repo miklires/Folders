@@ -8,14 +8,14 @@ import java.util.UUID;
 
 /**
  * One folder. Identity is the {@link #id()} and only the id — renaming a folder
- * never touches its contents (§5).
+ * never touches its contents.
  *
  * <p>Mutation goes through {@link FolderRepository} so the dirty flag and the
  * "an item lives in at most one folder" invariant stay honest; the setters here
  * are package-private for that reason.
  */
 public final class Folder {
-    /** Generous but bounded, per §12. */
+    /** Generous but bounded */
     public static final int MAX_NAME_LENGTH = 48;
 
     private final UUID id;

@@ -4,20 +4,28 @@ import dev.miklires.folders.core.FoldersData;
 import dev.miklires.folders.core.data.FolderRepository;
 import dev.miklires.folders.core.data.FolderType;
 import dev.miklires.folders.core.drag.DragManager;
-import dev.miklires.folders.core.storage.FoldersSettings;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Mod-wide handles. Kept deliberately thin: this is a lookup point, not a place
- * for logic (§44).
+ * Mod-wide handles: the loaded folder data, the drag state, and the log.
+ *
+ * <p>A lookup point, not a place for logic. Everything that decides anything lives in the
+ * controllers, and everything that persists anything lives in {@code core.storage}.
  */
 public final class Folders {
+
     public static final String MOD_ID = "folders";
+
     public static final Logger LOGGER = LoggerFactory.getLogger("Folders");
 
-    /** One drag manager for the whole game — see §15. */
+    /**
+     * One drag manager for the whole game.
+     *
+     * <p>Three screens sharing one state machine is what stops each of them growing its own subtly
+     * different idea of when a press becomes a drag.
+     */
     private static final DragManager DRAG_MANAGER = new DragManager();
 
     private static FoldersData data;
@@ -25,13 +33,13 @@ public final class Folders {
     private Folders() {
     }
 
-    static void initialise() {
+    public static void initialise() {
         data = FoldersData.load(FabricLoader.getInstance().getConfigDir());
     }
 
     /**
-     * Lazily loads on first use so a screen opened before the initialiser ran
-     * still works, and so the tests never need a Fabric environment.
+     * Loads on first use if the initialiser has not run yet, so a screen opened unusually early
+     * still works instead of throwing.
      */
     public static FoldersData data() {
         if (data == null) {
@@ -44,16 +52,15 @@ public final class Folders {
         return data().repository(type);
     }
 
-    public static FoldersSettings settings() {
-        return data().settings();
-    }
-
     public static DragManager dragManager() {
         return DRAG_MANAGER;
     }
 
     /**
-     * Runs an action that must never take a vanilla screen down with it (§74).
+     * Runs something that must never take a vanilla screen down with it.
+     *
+     * <p>A broken icon, a malformed config or a mapping that moved should cost the folder row, not
+     * the multiplayer menu. Every entry point from a mixin goes through here.
      *
      * @return true if the action completed
      */

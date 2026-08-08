@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class ItemIdentityTest {
 
     @Test
-    @DisplayName("the default port is implied, so host and host:25565 are one server (§6)")
+    @DisplayName("the default port is implied, so host and host:25565 are one server")
     void defaultPortIsCanonical() {
         assertEquals(ItemIdentity.server("example.com"), ItemIdentity.server("example.com:25565"));
         assertEquals("server:example.com:25565", ItemIdentity.server("example.com"));
@@ -68,7 +68,7 @@ class ItemIdentityTest {
     }
 
     @Test
-    @DisplayName("packs are keyed by profile id, so two packs named alike stay distinct (§6)")
+    @DisplayName("packs are keyed by profile id, so two packs named alike stay distinct")
     void packUsesProfileId() {
         assertEquals("pack:file/shaders.zip", ItemIdentity.resourcePack("file/shaders.zip"));
         assertNotEquals(ItemIdentity.resourcePack("file/a/pack.zip"), ItemIdentity.resourcePack("file/b/pack.zip"));

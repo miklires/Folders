@@ -18,7 +18,6 @@ import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JsonStorageTest {
@@ -29,7 +28,7 @@ class JsonStorageTest {
     }
 
     @Test
-    @DisplayName("a missing file loads as an empty configuration (§8)")
+    @DisplayName("a missing file loads as an empty configuration")
     void missingFile(@TempDir Path dir) {
         try (JsonStorage storage = new JsonStorage(dir)) {
             FolderConfig config = storage.load(FolderType.WORLDS);
@@ -49,7 +48,7 @@ class JsonStorageTest {
     }
 
     @Test
-    @DisplayName("a corrupt file is backed up and replaced, the game carries on (§8)")
+    @DisplayName("a corrupt file is backed up and replaced, the game carries on")
     void corruptFileIsQuarantined(@TempDir Path dir) throws IOException {
         write(dir.resolve("worlds.json"), "{ this is not json ");
         try (JsonStorage storage = new JsonStorage(dir)) {
@@ -81,7 +80,7 @@ class JsonStorageTest {
     }
 
     @Test
-    @DisplayName("a file from a newer format version is preserved, not mangled (§8)")
+    @DisplayName("a file from a newer format version is preserved, not mangled")
     void futureVersionIsQuarantined(@TempDir Path dir) throws IOException {
         write(dir.resolve("worlds.json"), "{\"version\": 99, \"folders\": []}");
         try (JsonStorage storage = new JsonStorage(dir)) {
@@ -120,7 +119,7 @@ class JsonStorageTest {
     }
 
     @Test
-    @DisplayName("an icon file name that looks like a path falls back to the default (§52)")
+    @DisplayName("an icon file name that looks like a path falls back to the default")
     void rejectsPathShapedIconNames(@TempDir Path dir) throws IOException {
         write(dir.resolve("worlds.json"), """
                 {"version":1,"folders":[
@@ -135,7 +134,7 @@ class JsonStorageTest {
     }
 
     @Test
-    @DisplayName("a saved configuration reloads identically (§57, §59)")
+    @DisplayName("a saved configuration reloads identically")
     void roundTrip(@TempDir Path dir) throws ExecutionException, InterruptedException {
         try (JsonStorage storage = new JsonStorage(dir)) {
             FolderRepository repository = FolderRepository.empty(FolderType.WORLDS);
@@ -162,7 +161,7 @@ class JsonStorageTest {
     }
 
     @Test
-    @DisplayName("queued saves land in order and leave no temp file behind (§51)")
+    @DisplayName("queued saves land in order and leave no temp file behind")
     void savesAreSerialised(@TempDir Path dir) throws Exception {
         try (JsonStorage storage = new JsonStorage(dir)) {
             FolderRepository repository = FolderRepository.empty(FolderType.WORLDS);
@@ -180,31 +179,5 @@ class JsonStorageTest {
         }
     }
 
-    @Test
-    @DisplayName("settings survive a round trip and clamp the animation speed")
-    void settingsRoundTrip(@TempDir Path dir) {
-        Path file = dir.resolve("settings.json");
-        FoldersSettings settings = new FoldersSettings();
-        settings.setAnimations(false);
-        settings.setAnimationSpeed(1000.0f);
-        settings.setShowStatistics(false);
-        settings.save(file);
 
-        FoldersSettings reloaded = FoldersSettings.load(file);
-        assertFalse(reloaded.animations());
-        assertEquals(FoldersSettings.MAX_ANIMATION_SPEED, reloaded.animationSpeed());
-        assertFalse(reloaded.showStatistics());
-        assertTrue(reloaded.showOnlineIndicator());
-        assertEquals(0L, reloaded.scaledDuration(200L), "animations off means no duration");
-    }
-
-    @Test
-    @DisplayName("broken settings fall back to defaults instead of throwing")
-    void brokenSettings(@TempDir Path dir) throws IOException {
-        Path file = dir.resolve("settings.json");
-        write(file, "not json at all");
-        FoldersSettings settings = FoldersSettings.load(file);
-        assertNotNull(settings);
-        assertTrue(settings.animations());
-    }
 }

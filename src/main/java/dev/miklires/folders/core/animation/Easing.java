@@ -1,7 +1,7 @@
 package dev.miklires.folders.core.animation;
 
 /**
- * Easing curves for §66. {@link #EASE_OUT_CUBIC} is the default: it starts fast
+ * Easing curves for {@link #EASE_OUT_CUBIC} is the default: it starts fast
  * and settles, which is what makes a list expansion feel like it snaps open
  * rather than drifts.
  */

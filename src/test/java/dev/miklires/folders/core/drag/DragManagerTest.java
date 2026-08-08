@@ -67,7 +67,7 @@ class DragManagerTest {
     }
 
     @Test
-    @DisplayName("a short movement stays a click (§16)")
+    @DisplayName("a short movement stays a click")
     void shortMovementIsAClick() {
         manager.press(payload, 100, 100, 0L);
         assertFalse(manager.move(102, 101));
@@ -115,7 +115,7 @@ class DragManagerTest {
     }
 
     @Test
-    @DisplayName("a target that refuses the payload is never highlighted and never receives it (§17)")
+    @DisplayName("a target that refuses the payload is never highlighted and never receives it")
     void refusingTargetIsSkipped() {
         TestTarget refuses = new TestTarget(0, 200, 300, 240, false, 0);
         manager.press(payload, 100, 100, 0L);
@@ -143,7 +143,7 @@ class DragManagerTest {
     }
 
     @Test
-    @DisplayName("cancel abandons the gesture (§40)")
+    @DisplayName("cancel abandons the gesture")
     void cancelClearsEverything() {
         TestTarget target = TestTarget.at(0, 200, 300, 240);
         manager.press(payload, 100, 100, 0L);
@@ -175,7 +175,7 @@ class DragManagerTest {
     }
 
     @Test
-    @DisplayName("a folder payload carries its id so a folder can be reordered too (§61)")
+    @DisplayName("a folder payload carries its id so a folder can be reordered too")
     void folderPayload() {
         UUID id = UUID.randomUUID();
         DragPayload.FolderHandle handle = new DragPayload.FolderHandle(FolderType.SERVERS, id, "Servers");

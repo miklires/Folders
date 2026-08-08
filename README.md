@@ -1,5 +1,4 @@
 # Folders
-
 A client-side Fabric mod that adds folders to the singleplayer, multiplayer and
 resource pack screens.
 
@@ -15,17 +14,19 @@ behaves exactly as it did before, with every world, server and pack where it was
 **The core is implemented and tested. The Minecraft-facing layer is written but
 has not been compiled or run.**
 
-That split is not an accident of effort, it is what the environment allowed:
-`maven.fabricmc.net`, `meta.fabricmc.net` and `libraries.minecraft.net` are all
-blocked by the network policy where this was developed, so Gradle cannot resolve
-Fabric Loom or Minecraft itself, and the real 1.26.2 mappings could not be
-consulted. Rather than guess quietly, the mod is arranged so the guessing is
-confined to as few lines as possible.
+That split is what the environment allowed: `maven.fabricmc.net` and
+`libraries.minecraft.net` are blocked by the network policy where this was
+developed, so Gradle cannot resolve Loom or Minecraft here and the 26.2 mappings
+could not be consulted directly. The class and method names below were taken
+from ChatUtils, which targets the same version — so the shapes are real, but the
+parts ChatUtils does not itself use (the selection lists above all) are inferred.
+Rather than guess quietly, the mod is arranged so the guessing is confined to as
+few lines as possible.
 
 | Layer | State |
 |---|---|
-| `core/` — model, storage, identity, drag, animation, layout | Compiled and unit tested, 65 tests green |
-| `identity/`, `ui/`, `integration/`, `mixin/` | Written, reviewed, **not compiled** |
+| `core/` — model, storage, identity, drag, animation, layout | Compiled and unit tested, 63 tests green |
+| `client/…`, `mixin/client/…` | Written against Mojang 26.2 names, **not compiled** |
 | Textures, translations, manifests | Present |
 
 Before the first build, work through [Mapping checklist](#mapping-checklist).
@@ -39,9 +40,9 @@ Before the first build, work through [Mapping checklist](#mapping-checklist).
 ./gradlew runClient      # test in-game
 ```
 
-Versions live in `gradle.properties` and **must be checked against
-<https://fabricmc.net/develop> first** — the values there are placeholders that
-could not be verified offline.
+Versions in `gradle.properties` match ChatUtils: Minecraft `26.2`, loader
+`0.19.3`, Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Java 25, Mojang
+mappings (no `mappings` dependency — Loom defaults to them).
 
 ### Verifying the core without Minecraft
 
@@ -69,23 +70,26 @@ re-exported from an image editor.
 ## Architecture
 
 ```
-core/                       no Minecraft imports anywhere below this line
-├── data/                   Folder, FolderConfig, FolderRepository, FolderType
-├── storage/                JsonStorage, FolderCodec, FoldersSettings
-├── identity/               ItemIdentity — the id rules
-├── drag/                   DragManager, DragState, DragPayload, DropTarget
-├── animation/              Animation, Easing
-└── view/                   FolderViewModel, DisplayRow — the accordion layout
+src/main/java/dev/miklires/folders/
+├── Folders                 mod-wide handles
+└── core/                   no Minecraft imports anywhere below this line
+    ├── data/               Folder, FolderConfig, FolderRepository, FolderType
+    ├── storage/            JsonStorage, FolderCodec
+    ├── identity/           ItemIdentity — the id rules
+    ├── drag/               DragManager, DragState, DragPayload, DropTarget
+    ├── animation/          Animation, Easing
+    └── view/               FolderViewModel, DisplayRow — the accordion layout
 
-identity/                   resolvers: LevelSummary / ServerInfo / Pack -> id
-ui/                         GuiCompat, FolderRowRenderer, GhostRenderer,
-                            FolderContextMenu, IconManager, FolderIconPicker
-integration/                FolderListController + one subclass per screen
-mixin/                      thin injection points only
+src/client/java/dev/miklires/folders/
+├── client/config/          FoldersConfig (YACL), ConfigScreen
+├── client/identity/        LevelSummary / ServerData / PackSelectionModel -> id
+├── client/ui/              GuiCompat, FolderRowRenderer, GhostRenderer,
+│                           FolderContextMenu, IconManager, FolderIconPicker
+├── client/integration/     FolderListController + one subclass per screen
+└── mixin/client/           thin injection points only
 ```
 
-The rule the layering enforces is the one from §44 of the brief: a mixin
-connects, a controller decides, a repository holds, storage persists. No mixin
+The layering enforces one rule: a mixin connects, a controller decides, a repository holds, storage persists. No mixin
 contains folder logic and no folder logic imports a mixin.
 
 Three decisions are worth calling out.
@@ -96,22 +100,23 @@ makes the interesting parts testable. The invariants that actually break a mod
 to frame rate) are all exercised by `tools/verify-core.sh` in under half a
 second, with no game and no mappings.
 
-**Every version-sensitive call is funnelled through `ui/GuiCompat`.**
-`DrawContext` is the fastest-moving API in the client and 26.2 moves it again.
-Eight methods there carry the whole mod's rendering, so a mappings bump is a
+**Every version-sensitive call is funnelled through `client/ui/GuiCompat`.**
+26.2 draws through `GuiGraphicsExtractor` — widgets extract a render state
+instead of issuing draw calls — and the signatures moved with it. A dozen methods
+there carry the whole mod's rendering, so the next time that happens it is a
 one-file fix rather than a hunt through the renderer, the entries and the menu.
-Files that need checking against real mappings are all marked `MAPPING NOTE`.
+Files needing a check against real mappings are all marked `MAPPING NOTE`.
 
 **Folder rows are `FolderEntryDelegate` plus a five-line shell per screen.** The
 three shells subclass whatever entry type their list demands; everything they do
-lives in the shared delegate. That is §45 — nothing is designed around one
-particular `EntryListWidget.Entry`.
+lives in the shared delegate. Nothing is designed around one particular selection-list entry class, which is
+the part most likely to be renamed out from under the mod.
 
 ---
 
 ## How the pieces work
 
-### Identity (§6)
+### Identity
 
 Never a list index, never a display name.
 
@@ -122,11 +127,11 @@ Never a list index, never a display name.
 | Resource pack | profile id (`file/shaders.zip`) | two packs sharing a title |
 
 Minecraft exposes no world UUID to the client, and writing a marker file into
-`saves/` would be exactly the interference §77 forbids, so the directory name is
-the key. It is what Minecraft itself uses, and it does not change when the player
-renames a world — the case §6 actually cares about.
+`saves/` is exactly the interference this mod exists to avoid, so the directory
+name is the key. It is what Minecraft itself uses, and it does not change when the player
+renames a world, which is the case that matters.
 
-### Ordering (§60, §61)
+### Ordering
 
 `config/folders/*.json` stores a `root` array: the full top-level order, where a
 folder is `folder:<uuid>` and anything else is an item id. A folder can therefore
@@ -139,12 +144,11 @@ top of a last-played list, lands at the top; a brand new server, which
 casing.
 
 > **Trade-off.** Because the stored order wins, worlds stop re-sorting by
-> last-played once Folders has seen them. That is what §60 asks for and what §62
-> implies by listing "by date" as a *future* sort mode, but it is a visible
-> behaviour change. If it turns out to be the wrong call, the fix is local:
+> last-played once Folders has seen them. That is what a manual ordering means,
+> but it is a visible behaviour change. If it turns out to be the wrong call, the fix is local:
 > anchor folders to a neighbouring item instead of storing loose items in `root`.
 
-### Corruption (§8)
+### Corruption
 
 An unreadable `worlds.json` is moved to `worlds.json.bak`, logged, and replaced
 with an empty config; the game keeps going. A second corruption gets a
@@ -153,7 +157,7 @@ timestamped name rather than overwriting the first backup. A file that is merely
 the wrong type, an icon path with `..` in it are each dropped individually. A
 config written by a newer Folders is quarantined rather than mangled.
 
-### Saving (§50, §51)
+### Saving
 
 Nothing writes during rendering. Mutations set a dirty flag; the operation that
 finishes (drop, rename, delete, toggle) calls `saveIfDirty`. Serialisation is
@@ -162,10 +166,10 @@ again — and the write itself goes to a background thread, one chain per file, 
 two saves cannot interleave or land out of order. Writes are atomic via
 tmp-then-move.
 
-### The accordion (§26–§29)
+### The accordion
 
 One number per folder: how far open it is. Row positions fall out of it, so no
-entry needs its own timer. `EntryListWidgetMixin` swaps vanilla's
+entry needs its own timer. `AbstractSelectionListMixin` swaps vanilla's
 `index * itemHeight` for a lookup, but only on lists Folders has installed a
 layout on — every other list in the game takes an early return and is untouched.
 
@@ -173,26 +177,26 @@ Animations run on elapsed wall time, 200 ms, ease-out-cubic. Retargeting
 mid-flight eases from the current value, so opening and immediately closing a
 folder does not snap.
 
-### Drag versus click (§16)
+### Drag versus click
 
 One `DragManager` for all three screens. A press is not a drag until the pointer
 travels 5 px, so a click on a world still opens the world and a click on a folder
 still opens the folder.
 
-**Resource packs are the interesting case (§49)**, because vanilla already uses
+**Resource packs are the interesting case **, because vanilla already uses
 drag there to move packs between the two lists. The two modes are split by area,
 not by heuristics: a drag starting on the pack's 32 px icon is a Folders drag,
 a drag starting anywhere else on the row is the vanilla one.
 
-### Resource pack folders (§48)
+### Resource pack folders
 
 The pack screen is two lists and a pack is physically in one of them. A folder is
 remembered per pack id, so it appears in whichever list its packs are in — the
 same folder can show on both sides, each showing only the packs on that side.
 Enable/disable always goes through `ResourcePackOrganizer`; Minecraft stays the
-source of truth for what is on, and the folder stores no copy of it (§34).
+source of truth for what is on, and the folder stores no copy of it.
 
-### Icons (§22, §52, §75)
+### Icons
 
 The file on disk is named after the folder UUID, so a folder called
 `../../server` cannot escape the icon directory — the user's name never touches a
@@ -205,20 +209,22 @@ retried every frame.
 
 ## Mapping checklist
 
-Everything below is written against 1.21.x Yarn shapes and needs confirming.
-Grep for `MAPPING NOTE`; these are the load-bearing ones.
+Everything below is written against Mojang 26.2 names. The ones ChatUtils
+already exercises (`GuiGraphicsExtractor`, `MouseButtonEvent`, `RenderPipelines`,
+`Identifier`, `ARGB`) are confirmed; the selection lists are not. Grep for
+`MAPPING NOTE`.
 
 | File | What to check | If wrong |
 |---|---|---|
-| `ui/GuiCompat` | `DrawContext` texture / scissor / matrix signatures | Nothing draws |
-| `mixin/EntryListWidgetMixin` | `getRowTop`, `getMaxPosition`, `getEntryAtPosition`, and vanilla's row-top formula | Rows misplaced, clicks land on the wrong row |
-| `mixin/world/WorldEntryAccessor` | field `level`; `LevelSummary.getName()` is the **directory**, `getDisplayName()` the title | Folders keyed on display name — the thing §77.9 forbids |
-| `mixin/server/ServerEntryAccessor` | field `server`; `ServerInfo.address`, `.online` | No server identity, no online dot |
-| `mixin/pack/ResourcePackEntryAccessor` | field `pack`; `Pack.getName()` is the **profile id** | Packs keyed on display name |
-| `mixin/server/MultiplayerScreenAccessor` | field `serverListPinger`, and `add(...)`'s arity | "Refresh ping" does nothing |
-| `integration/pack/FolderPackStub` | `ResourcePackOrganizer.Pack` still an interface | Folder rows cannot exist in the pack list |
-| screen mixins | `levelList`, `serverListWidget`, `availablePackList`; `show`, `setServers` | No button, or the list never rebuilds |
-| entry classes | `Entry#render` signature | Folder rows do not draw |
+| `mixin/client/AbstractSelectionListMixin` | `getRowTop`, `getMaxPosition`, `getEntryAtPosition`, and vanilla's row-top formula | Rows misplaced, clicks land on the wrong row |
+| entry classes | the `Entry` render hook — 26.2 may extract a render state here too rather than take a draw call | Folder rows do not draw |
+| `WorldListEntryAccessor` | field `level`; `getLevelId` is the **directory**, `getLevelName` the title | Folders keyed on display name |
+| `OnlineServerEntryAccessor` | field `server`; `ServerData.ip`, `.online` | No server identity, no online dot |
+| `PackEntryAccessor` | field `pack`; `PackSelectionModel.Entry.getId` is the **profile id** | Packs keyed on display name |
+| `JoinMultiplayerScreenAccessor` | field `serverListPinger`, and `ServerStatusPinger.add(...)`'s arity | "Refresh ping" does nothing |
+| `FolderPackStub` | `PackSelectionModel.Entry` still an interface, and its full method set | Folder rows cannot exist in the pack list |
+| screen mixins | `levelList`, `serverListWidget`, `availablePackList`; the `show` / `setServers` rebuild hooks | No button, or the list never rebuilds |
+| `GuiCompat` | `enableScissor` / `pose` on the extractor | Rows spill past their band; overlays draw under the list |
 
 `FolderPackStub` deserves a second look. `PackListWidget` is an
 `EntryListWidget<ResourcePackEntry>`, so every row must be a pack entry and every
@@ -231,14 +237,13 @@ folder row, it changes no pack state.
 
 ## Not implemented
 
-Deliberate omissions, all P3 in the brief: search (§64), extra sort modes (§62),
-nested folders (§10 rules them out for v1), recently-used indicators (§63),
-shift-drag quick move (§65). The settings from §70 are stored and honoured but
-have no options screen yet — edit `config/folders/settings.json`.
+Deliberate omissions: search, extra sort modes,
+nested folders, recently-used indicators, shift-drag quick move. Settings live
+behind the Mod Menu cog (YACL, `config/folders.json`).
 
 Root-level reordering of loose *items* by drag is not wired up either; dragging
-between folders and the root is, and ordering *inside* a folder is. §19 marks
-this as deferrable, and the data model already supports it.
+between folders and the root is, and ordering *inside* a folder is. The data
+model already supports it.
 
 ## Layout on disk
 
@@ -247,14 +252,15 @@ this as deferrable, and the data model already supports it.
 ├── worlds.json
 ├── servers.json
 ├── resource_packs.json
-├── settings.json
 └── icons/
     └── <folder-uuid>.png
+
+.minecraft/config/folders.json     # the YACL settings
 ```
 
 Removing the mod leaves this directory in place, so reinstalling restores every
-folder (§57).
+folder.
 
 ## Licence
 
-MIT.
+All rights reserved.

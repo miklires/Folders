@@ -10,7 +10,7 @@ import java.util.UUID;
  * <p>{@code root} is the ordering of the top level: a flat list of tokens where
  * a folder is {@code folder:<uuid>} and anything else is an item id. Keeping the
  * order here is what stops a list from silently re-sorting itself into
- * "folders first, items after" (§60, §61).
+ * "folders first, items after".
  */
 public final class FolderConfig {
     /** Bump only alongside a migration in {@code FolderCodec}. */

@@ -4,7 +4,7 @@ package dev.miklires.folders.core.data;
  * The kinds of vanilla list a folder can group.
  *
  * <p>Adding a fourth content type means adding a constant here plus one
- * integration class; nothing in {@code core} needs to change. See §79 of the
+ * integration class; nothing in {@code core} needs to change. See of the
  * spec.
  */
 public enum FolderType {

@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * What is being dragged: either a list item or a whole folder (§14).
+ * What is being dragged: either a list item or a whole folder.
  *
  * <p>{@code displayName} is carried only so the ghost preview has something to
  * draw without reaching back into the screen.
