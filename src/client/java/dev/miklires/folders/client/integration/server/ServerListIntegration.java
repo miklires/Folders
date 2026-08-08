@@ -10,8 +10,6 @@ import dev.miklires.folders.client.ui.FolderStats;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.multiplayer.ServerData;
 
-import java.util.List;
-
 /**
  * Folders in the multiplayer list.
  *
@@ -23,7 +21,6 @@ public final class ServerListIntegration extends FolderListController<ServerSele
 
     private final ServerSelectionList widget;
     private final Runnable rebuild;
-
 
     public ServerListIntegration(ServerSelectionList widget, Runnable rebuild) {
         super(FolderType.SERVERS);
@@ -54,7 +51,7 @@ public final class ServerListIntegration extends FolderListController<ServerSele
 
     @Override
     protected FolderStats statsFor(Folder folder) {
-        return FolderStats.of(countPresent(folder), countOnline(folder));
+        return FolderStats.of(countPresent(folder));
     }
 
     @Override
@@ -62,9 +59,13 @@ public final class ServerListIntegration extends FolderListController<ServerSele
         return "folders.count.servers";
     }
 
+    /**
+     * No second figure while the online state is unknown; "Online: 0" on a folder full of live
+     * servers would be a lie, and an empty column is honest.
+     */
     @Override
     protected String highlightKey() {
-        return "folders.count.online";
+        return null;
     }
 
     /**
@@ -78,23 +79,6 @@ public final class ServerListIntegration extends FolderListController<ServerSele
     @Override
     protected FolderRowRenderer.OnlineState onlineStateFor(Folder folder) {
         return FolderRowRenderer.OnlineState.NONE;
-    }
-
-    private int countOnline(Folder folder) {
-        int online = 0;
-        for (ServerData info : serversIn(folder)) {
-            if (isOnline(info)) {
-                online++;
-            }
-        }
-        return online;
-    }
-
-    private List<ServerData> serversIn(Folder folder) {
-        return presentEntries(folder).stream()
-                .map(ServerListIntegration::infoOf)
-                .filter(java.util.Objects::nonNull)
-                .toList();
     }
 
     @Override
