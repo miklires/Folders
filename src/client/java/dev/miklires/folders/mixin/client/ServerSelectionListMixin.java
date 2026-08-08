@@ -1,5 +1,6 @@
 package dev.miklires.folders.mixin.client;
 
+import dev.miklires.folders.Folders;
 import dev.miklires.folders.client.integration.FolderListController;
 import dev.miklires.folders.client.integration.FoldersControllerHost;
 import dev.miklires.folders.client.integration.FoldersListHooks;
@@ -29,15 +30,20 @@ public abstract class ServerSelectionListMixin implements FoldersControllerHost 
         if (folders$integration == null) {
             ServerSelectionList self = (ServerSelectionList) (Object) this;
             folders$integration = new ServerListIntegration(self,
-                    () -> FoldersListHooks.applyEntries(self, folders$integration(), true));
+                    () -> folders$apply(self, true));
         }
         return folders$integration;
     }
 
     @Inject(method = "refreshEntries", at = @At("TAIL"))
     private void folders$afterRefreshEntries(CallbackInfo info) {
-        ServerSelectionList self = (ServerSelectionList) (Object) this;
-        FoldersListHooks.applyEntries(self, folders$integration(), true);
+        folders$apply((ServerSelectionList) (Object) this, true);
+    }
+
+    @Unique
+    private void folders$apply(ServerSelectionList self, boolean complete) {
+        Folders.guarded("rebuilding the list", () ->
+                self.replaceEntries(FoldersListHooks.orderedEntries(self, folders$integration(), complete)));
     }
 
     @Override

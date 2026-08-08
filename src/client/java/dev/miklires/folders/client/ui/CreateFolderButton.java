@@ -29,6 +29,17 @@ public final class CreateFolderButton {
     public static final int DEFAULT_WIDTH = 100;
     public static final int DEFAULT_HEIGHT = 20;
 
+    /**
+     * Inset from the top-left corner.
+     *
+     * <p>Both screens lay their footer out with {@code HeaderAndFooterLayout}, which owns those
+     * rows and repositions them on every resize. A free-floating widget dropped into that area
+     * lands on top of "Play Selected World" and "Join Server" — which is exactly what happened.
+     * The corner is the one place on all three screens that vanilla leaves empty, so the button
+     * goes there until it is added to the layout properly rather than beside it.
+     */
+    public static final int MARGIN = 6;
+
     private CreateFolderButton() {
     }
 
@@ -40,11 +51,19 @@ public final class CreateFolderButton {
     }
 
     private static void onPressed(Screen screen) {
-        Folders.guarded("creating a folder", () -> host(screen).ifPresent(host -> {
-            FolderListController<?> controller = host.folders$controller();
+        Folders.guarded("creating a folder", () -> {
+            Optional<FoldersControllerHost> host = host(screen);
+            if (host.isEmpty()) {
+                // Says so rather than doing nothing: a button that silently no-ops is the hardest
+                // kind of failure to report.
+                Folders.LOGGER.warn("No folder list found on {}; Create folder did nothing",
+                        screen.getClass().getName());
+                return;
+            }
+            FolderListController<?> controller = host.get().folders$controller();
             // Created, saved, and put straight into rename mode.
             controller.createFolder();
-        }));
+        });
     }
 
     /** The first child widget Folders has attached a controller to, if the screen has one. */

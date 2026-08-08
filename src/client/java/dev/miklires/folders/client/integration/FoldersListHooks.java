@@ -19,29 +19,22 @@ public final class FoldersListHooks {
     }
 
     /**
-     * Replaces a widget's children with the folder-aware ordering and installs the
-     * row layout.
+     * Works out the entries a list should hold, in display order.
+     *
+     * <p>The caller applies them with {@code replaceEntries}, which is the only supported way to
+     * swap a list's contents: 26.2 positions rows by walking them and accumulating heights, and
+     * that pass only runs from the list's own mutators. Editing {@code children()} in place leaves
+     * every row where the previous layout put it.
      *
      * @param complete false while the list is still loading
-     *
-     * <p>This mutates {@code children()} in place because the vanilla {@code clearEntries()} also
-     * resets scroll and selection, which would make the list jump every time a folder is renamed.
      */
     @SuppressWarnings("unchecked")
-    public static <E> void applyEntries(AbstractSelectionList<?> widget,
-                                        FolderListController<E> controller, boolean complete) {
-
-        Folders.guarded("rebuilding a list", () -> {
-            // AbstractSelectionList.Entry is protected, so neither the bound nor the element type
-            // can be named from outside. The list is handled as List<Object> and the controller,
-            // which does know the concrete entry type, is trusted for the contents.
-            List<Object> children = (List<Object>) widget.children();
-            List<E> ordered = controller.buildEntries((List<E>) List.copyOf(children), complete);
-
-            children.clear();
-            children.addAll((List<Object>) (List<?>) ordered);
-
-        });
+    public static <E> List<E> orderedEntries(AbstractSelectionList<?> widget,
+                                             FolderListController<E> controller, boolean complete) {
+        // AbstractSelectionList.Entry is protected, so the element type cannot be named from here;
+        // the controller does know it, and is the only thing that touches the contents.
+        List<E> vanilla = (List<E>) List.copyOf(widget.children());
+        return controller.buildEntries(vanilla, complete);
     }
 
     /** Advances animations and refreshes drop targets. Call at the head of render. */

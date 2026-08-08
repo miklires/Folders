@@ -28,8 +28,8 @@ public abstract class SelectWorldScreenMixin extends Screen {
     private void folders$addCreateButton(CallbackInfo info) {
         Folders.guarded("adding the Create folder button", () -> addRenderableWidget(
                 CreateFolderButton.create(this,
-                        this.width / 2 - 154,
-                        this.height - 28 - 24,
+                        CreateFolderButton.MARGIN,
+                        CreateFolderButton.MARGIN,
                         CreateFolderButton.DEFAULT_WIDTH,
                         CreateFolderButton.DEFAULT_HEIGHT)));
     }

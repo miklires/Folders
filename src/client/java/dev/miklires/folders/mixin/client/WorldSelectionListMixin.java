@@ -1,5 +1,6 @@
 package dev.miklires.folders.mixin.client;
 
+import dev.miklires.folders.Folders;
 import dev.miklires.folders.client.integration.FolderListController;
 import dev.miklires.folders.client.integration.FoldersControllerHost;
 import dev.miklires.folders.client.integration.FoldersListHooks;
@@ -31,7 +32,7 @@ public abstract class WorldSelectionListMixin implements FoldersControllerHost {
         if (folders$integration == null) {
             WorldSelectionList self = (WorldSelectionList) (Object) this;
             folders$integration = new WorldListIntegration(self,
-                    () -> FoldersListHooks.applyEntries(self, folders$integration(), true));
+                    () -> folders$apply(self, true));
         }
         return folders$integration;
     }
@@ -39,8 +40,13 @@ public abstract class WorldSelectionListMixin implements FoldersControllerHost {
     /** The saves are on screen, so the snapshot is complete and orphaned references can go. */
     @Inject(method = "fillLevels", at = @At("TAIL"))
     private void folders$afterFillLevels(String search, List<LevelSummary> levels, CallbackInfo info) {
-        WorldSelectionList self = (WorldSelectionList) (Object) this;
-        FoldersListHooks.applyEntries(self, folders$integration(), true);
+        folders$apply((WorldSelectionList) (Object) this, true);
+    }
+
+    @Unique
+    private void folders$apply(WorldSelectionList self, boolean complete) {
+        Folders.guarded("rebuilding the list", () ->
+                self.replaceEntries(FoldersListHooks.orderedEntries(self, folders$integration(), complete)));
     }
 
     @Override
