@@ -32,7 +32,6 @@ public final class FolderContextMenu {
     private static final int HOVER = 0x40FFFFFF;
     private static final int LABEL = 0xFFE0E0E0;
     private static final int LABEL_DISABLED = 0xFF6A6A6A;
-    private static final float LAYER = 300.0f;
 
     private final List<Item> items;
     private final int x;
@@ -66,7 +65,6 @@ public final class FolderContextMenu {
     }
 
     public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        GuiCompat.pushLayer(graphics, LAYER);
         GuiCompat.fill(graphics, x, y, x + width, y + height, BACKGROUND);
         GuiCompat.outline(graphics, x, y, width, height, BORDER);
 
@@ -79,7 +77,6 @@ public final class FolderContextMenu {
             GuiCompat.trimmedText(graphics, item.label(), x + PADDING, rowY, width - PADDING * 2,
                     item.enabled() ? LABEL : LABEL_DISABLED);
         }
-        GuiCompat.popLayer(graphics);
     }
 
     private boolean isOverRow(double mouseX, double mouseY, int rowY) {

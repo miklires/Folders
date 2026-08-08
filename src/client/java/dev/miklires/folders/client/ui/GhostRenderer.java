@@ -17,7 +17,6 @@ public final class GhostRenderer {
     private static final int BORDER = 0x80FFFFFF;
     private static final int TEXT = 0xFFFFFFFF;
     private static final int PADDING = 4;
-    private static final float LAYER = 400.0f;
 
     private GhostRenderer() {
     }
@@ -40,10 +39,8 @@ public final class GhostRenderer {
         int x = (int) drag.mouseX() + 8;
         int y = (int) drag.mouseY() + 8;
 
-        GuiCompat.pushLayer(graphics, LAYER);
         GuiCompat.fill(graphics, x, y, x + width, y + height, BACKGROUND);
         GuiCompat.outline(graphics, x, y, width, height, BORDER);
         GuiCompat.text(graphics, label, x + PADDING, y + PADDING, TEXT);
-        GuiCompat.popLayer(graphics);
     }
 }

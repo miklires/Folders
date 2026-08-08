@@ -1,11 +1,12 @@
 package dev.miklires.folders.client.integration;
 
 import dev.miklires.folders.Folders;
-import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.client.ui.FolderRowRenderer;
 import dev.miklires.folders.client.ui.GuiCompat;
+import dev.miklires.folders.core.data.Folder;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -13,16 +14,33 @@ import org.lwjgl.glfw.GLFW;
 /**
  * Everything a folder row does, independent of which list it is in.
  *
- * <p>Each screen's entry class is a five-line subclass of its own vanilla
- * {@code Entry} that forwards here, which is what stops the same interaction code
- * being written three times and keeps the mod off any one entry API.
+ * <p>Each screen's entry class is a short subclass of its own vanilla {@code Entry} that forwards
+ * here, which is what stops the same interaction code being written three times and keeps the mod
+ * off any one entry API.
  */
 public final class FolderEntryDelegate {
+
+    private static final int EDIT_BACKGROUND = 0xFF000000;
+    private static final int EDIT_BORDER = 0xFFA0A0A0;
+    private static final int EDIT_TEXT = 0xFFFFFFFF;
+    private static final int CARET = 0xFFD0D0D0;
+
+    /** Caret blink period; matches the feel of a vanilla text field. */
+    private static final long BLINK_MS = 600L;
 
     private final FolderListController<?> controller;
     private final Folder folder;
 
-    private EditBox renameField;
+    /**
+     * The rename buffer.
+     *
+     * <p>Written by hand rather than with an {@code EditBox}: a widget has to be positioned,
+     * focused and drawn by a screen, and a row inside a list is none of those things. A folder name
+     * is a single short line with no selection or scrolling, so the whole editor is the few methods
+     * below.
+     */
+    private StringBuilder buffer;
+    private long editingSince;
 
     public FolderEntryDelegate(FolderListController<?> controller, Folder folder) {
         this.controller = controller;
@@ -40,50 +58,50 @@ public final class FolderEntryDelegate {
     public void render(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
                        int mouseX, int mouseY, boolean hovered) {
         Folders.guarded("rendering a folder row", () -> {
-            if (controller.isRenaming(folder.id())) {
-                renderRenaming(graphics, x, y, width, height, mouseX, mouseY);
-                return;
+            boolean renaming = controller.isRenaming(folder.id());
+            if (!renaming) {
+                discardBuffer();
             }
-            discardRenameField();
             FolderRowRenderer.render(graphics,
-                    controller.rowContextFor(folder, x, y, mouseX, mouseY, hovered, 1.0f),
+                    controller.rowContextFor(folder, x, y, mouseX, mouseY, hovered && !renaming, 1.0f),
                     x, y, width, height);
+            if (renaming) {
+                renderEditor(graphics, x, y, width);
+            }
         });
     }
 
-    private void renderRenaming(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
-                                int mouseX, int mouseY) {
-        // The icon still draws, so the row does not visibly change shape while
-        // being renamed; only the name becomes a field.
-        FolderRowRenderer.render(graphics,
-                controller.rowContextFor(folder, x, y, mouseX, mouseY, false, 1.0f),
-                x, y, width, height);
+    /** Draws the name field over the name the row just drew. */
+    private void renderEditor(GuiGraphicsExtractor graphics, int x, int y, int width) {
+        int left = x + FolderRowRenderer.TEXT_OFFSET_X - 1;
+        int right = x + width - 4;
+        int top = y;
+        int bottom = y + GuiCompat.lineHeight() + 2;
 
-        EditBox field = renameField();
-        int fieldX = x + FolderRowRenderer.TEXT_OFFSET_X;
-        field.setX(fieldX);
-        field.setY(y + 1);
-        field.setWidth(Math.max(40, width - FolderRowRenderer.TEXT_OFFSET_X - 6));
-        // Cover the name the renderer just drew.
-        GuiCompat.fill(graphics, fieldX - 1, y, x + width, y + 12, 0xFF000000);
-        field.render(graphics, mouseX, mouseY, 0.0f);
-    }
+        GuiCompat.fill(graphics, left, top, right, bottom, EDIT_BACKGROUND);
+        GuiCompat.outline(graphics, left, top, right - left, bottom - top, EDIT_BORDER);
 
-    private EditBox renameField() {
-        if (renameField == null) {
-            renameField = new EditBox(GuiCompat.font(), 0, 0, 100, 11,
-                    Component.translatable("folders.menu.rename"));
-            renameField.setMaxLength(Folder.MAX_NAME_LENGTH);
-            renameField.setValue(folder.name());
-            renameField.moveCursorToEnd(false);
-            renameField.setHighlightPos(0);
-            renameField.setFocused(true);
+        String text = buffer().toString();
+        int textX = left + 3;
+        GuiCompat.trimmedText(graphics, Component.literal(text), textX, top + 2, right - textX - 4, EDIT_TEXT);
+
+        boolean caretVisible = ((System.currentTimeMillis() - editingSince) / BLINK_MS) % 2 == 0;
+        if (caretVisible) {
+            int caretX = Math.min(textX + GuiCompat.width(Component.literal(text)), right - 2);
+            GuiCompat.fill(graphics, caretX, top + 2, caretX + 1, bottom - 2, CARET);
         }
-        return renameField;
     }
 
-    private void discardRenameField() {
-        renameField = null;
+    private StringBuilder buffer() {
+        if (buffer == null) {
+            buffer = new StringBuilder(folder.name());
+            editingSince = System.currentTimeMillis();
+        }
+        return buffer;
+    }
+
+    private void discardBuffer() {
+        buffer = null;
     }
 
     // ------------------------------------------------------------------
@@ -92,15 +110,16 @@ public final class FolderEntryDelegate {
 
     /**
      * @param click          26.2 hands the whole event across, including whether this was the
-     *                       second click of a pair — so the rename gesture needs no timer of its own
-     * @param rowX,rowY      screen position of this row, needed to tell the icon area from the name
+     *                       second click of a pair, so the rename gesture needs no timer of its own
+     * @param rowX,rowY      where the row was placed, to tell the icon area from the name
      * @param viewportBottom bottom of the list, so opening near the edge can scroll
      * @return true if the click was consumed
      */
     public boolean mouseClicked(MouseButtonEvent click, boolean doubled,
                                 int rowX, int rowY, int viewportBottom) {
         if (controller.isRenaming(folder.id())) {
-            return renameField().mouseClicked(click, doubled);
+            // Clicks land in the field while renaming rather than falling through to the row.
+            return true;
         }
 
         if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
@@ -112,8 +131,8 @@ public final class FolderEntryDelegate {
         }
 
         if (doubled) {
-            // Double click on the row renames it. Checked before the icon test so a quick
-            // double click anywhere on the folder does the same thing.
+            // A double click renames, checked before the icon test so a quick double click
+            // anywhere on the row does the same thing.
             controller.beginRename(folder.id());
             return true;
         }
@@ -135,11 +154,25 @@ public final class FolderEntryDelegate {
     // Keyboard
     // ------------------------------------------------------------------
 
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers, int viewportBottom) {
+    /**
+     * MAPPING NOTE: {@code KeyEvent} and {@code CharacterEvent} are 26.2's replacement for the old
+     * loose {@code (keyCode, scanCode, modifiers)} triples. Their accessors are read in exactly one
+     * place each, here, so a wrong guess is a two-line fix.
+     */
+    private static int keyOf(KeyEvent event) {
+        return event.key();
+    }
+
+    private static char charOf(CharacterEvent event) {
+        return (char) event.codepoint();
+    }
+
+    public boolean keyPressed(KeyEvent event, int viewportBottom) {
+        int key = keyOf(event);
         if (controller.isRenaming(folder.id())) {
-            return renameKeyPressed(keyCode, scanCode, modifiers);
+            return renameKeyPressed(key);
         }
-        return switch (keyCode) {
+        return switch (key) {
             case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
                 controller.toggle(folder, viewportBottom);
                 yield true;
@@ -156,36 +189,51 @@ public final class FolderEntryDelegate {
         };
     }
 
-    private boolean renameKeyPressed(int keyCode, int scanCode, int modifiers) {
-        switch (keyCode) {
+    private boolean renameKeyPressed(int key) {
+        switch (key) {
             case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
                 // An empty name is refused and the field stays open.
-                if (controller.commitRename(folder.id(), renameField().getValue())) {
-                    discardRenameField();
+                if (controller.commitRename(folder.id(), buffer().toString())) {
+                    discardBuffer();
                 }
                 return true;
             }
             case GLFW.GLFW_KEY_ESCAPE -> {
                 controller.cancelRename();
-                discardRenameField();
+                discardBuffer();
+                return true;
+            }
+            case GLFW.GLFW_KEY_BACKSPACE -> {
+                StringBuilder text = buffer();
+                if (!text.isEmpty()) {
+                    text.deleteCharAt(text.length() - 1);
+                }
                 return true;
             }
             default -> {
-                return renameField().keyPressed(keyCode, scanCode, modifiers);
+                // Everything else is swallowed so the list does not scroll or change selection
+                // under a field that is being typed into.
+                return true;
             }
         }
+    }
+
+    public boolean charTyped(CharacterEvent event) {
+        if (!controller.isRenaming(folder.id())) {
+            return false;
+        }
+        char typed = charOf(event);
+        StringBuilder text = buffer();
+        if (typed >= ' ' && typed != 127 && text.length() < Folder.MAX_NAME_LENGTH) {
+            text.append(typed);
+        }
+        return true;
     }
 
     /** Open or close, as the keyboard and a double click both mean. */
     public void activate(int viewportBottom) {
         controller.toggle(folder, viewportBottom);
     }
-
-    public boolean charTyped(char chr, int modifiers) {
-        return controller.isRenaming(folder.id()) && renameField().charTyped(chr, modifiers);
-    }
-
-    // ------------------------------------------------------------------
 
     public Component narration() {
         return controller.narrationFor(folder);

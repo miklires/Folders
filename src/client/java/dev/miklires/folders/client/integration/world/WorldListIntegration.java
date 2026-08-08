@@ -34,13 +34,13 @@ public final class WorldListIntegration extends FolderListController<WorldSelect
             // are passed through untouched.
             return null;
         }
-        return WorldIdentityResolver.idOf(((WorldListEntryAccessor) worldEntry).folders$summary());
+        return WorldIdentityResolver.idOf(((WorldListEntryAccessor) (Object) worldEntry).folders$summary());
     }
 
     @Override
     protected String displayNameOf(WorldSelectionList.Entry entry) {
         if (entry instanceof WorldSelectionList.WorldListEntry worldEntry) {
-            return ((WorldListEntryAccessor) worldEntry).folders$summary().getLevelName();
+            return ((WorldListEntryAccessor) (Object) worldEntry).folders$summary().getLevelName();
         }
         return "";
     }

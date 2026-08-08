@@ -4,6 +4,8 @@ import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.client.integration.FolderEntryDelegate;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
@@ -43,14 +45,13 @@ public final class WorldFolderEntry extends WorldSelectionList.Entry {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return delegate.keyPressed(keyCode, scanCode, modifiers, list.getBottom())
-                || super.keyPressed(keyCode, scanCode, modifiers);
+    public boolean keyPressed(KeyEvent event) {
+        return delegate.keyPressed(event, list.getBottom()) || super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(char chr, int modifiers) {
-        return delegate.charTyped(chr, modifiers) || super.charTyped(chr, modifiers);
+    public boolean charTyped(CharacterEvent event) {
+        return delegate.charTyped(event) || super.charTyped(event);
     }
 
     @Override

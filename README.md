@@ -11,8 +11,8 @@ behaves exactly as it did before, with every world, server and pack where it was
 
 ## Status
 
-**The core is implemented and tested. The Minecraft-facing layer is written but
-has not been compiled or run.**
+**The core is implemented and tested. Worlds and servers are written against
+real 26.2 signatures. Resource packs are not in the build.**
 
 That split is what the environment allowed: `maven.fabricmc.net` and
 `libraries.minecraft.net` are blocked by the network policy where this was
@@ -26,10 +26,29 @@ few lines as possible.
 | Layer | State |
 |---|---|
 | `core/` — model, storage, identity, drag, animation, layout | Compiled and unit tested, 63 tests green |
-| `client/…`, `mixin/client/…` | Written against Mojang 26.2 names, **not compiled** |
+| Worlds, servers — rows, drag, rename, context menu | Written against real 26.2 signatures |
+| Resource packs | **Removed from the build**, see below |
+| Server ping / online dot | **Disabled**, see below |
 | Textures, translations, manifests | Present |
 
-Before the first build, work through [Mapping checklist](#mapping-checklist).
+### What is switched off, and why
+
+Three things could not be written against APIs that could be confirmed, so rather
+than ship code that does not compile or a UI that reports invented state, they are
+out:
+
+- **Resource pack folders.** `TransferableSelectionList.PackEntry` is a non-static
+  inner class, and `TransferableSelectionList` is not an
+  `ObjectSelectionList<PackEntry>`, so neither the row nor the list mixin could be
+  written blind. Everything else about packs — identity by profile id, the shared
+  repository, the JSON — is designed and unchanged; it needs the entry class
+  shape and the list's rebuild hook to come back.
+- **The online dot and the online count.** `ServerData` no longer exposes
+  `online` or `ping`. `onlineStateFor` returns `NONE` until the replacement is
+  known; one method restores it.
+- **"Refresh ping".** `ServerStatusPinger.add` does not take
+  `(ServerData, Runnable, Runnable)`. The bounded-concurrency coordinator that
+  drove it was deleted rather than left dead.
 
 ---
 
@@ -218,29 +237,20 @@ retried every frame.
 
 ## Mapping checklist
 
-The world and server sides have since been checked against working 26.2 code
-and corrected: the row hook is `extractContent(GuiGraphicsExtractor, mouseX,
-mouseY, hovered, delta)` with the entry reporting its own bounds, the accessor
-fields are `summary` / `serverData` / `pack`, and the rebuild hooks are
-`fillLevels` and `refreshEntries`. What is left unverified is the pack list and
-the variable-height mixin. Grep for `MAPPING NOTE`.
+What is left unverified, all of it flagged with `MAPPING NOTE`:
 
-| File | What to check | If wrong |
-|---|---|---|
-| `mixin/client/AbstractSelectionListMixin` | `getRowTop`, `getMaxPosition`, `getEntryAtPosition`, and vanilla's row-top formula | Rows misplaced, clicks land on the wrong row |
-| `integration/pack/PackFolderEntry` | the `TransferableSelectionList.PackEntry` constructor | Folder rows cannot exist in the pack list |
-| `integration/pack/FolderPackStub` | `PackSelectionModel.Entry` still an interface, and its full method set | Same |
-| `mixin/client/TransferableSelectionListMixin` | the rebuild hook — the world and server equivalents turned out to be `fillLevels` and `refreshEntries`, so this one is likely not `render` either | Pack folders never appear |
-| `mixin/client/PackSelectionScreenMixin` | field `availablePackList` | No button on the pack screen |
-| `mixin/client/JoinMultiplayerScreenAccessor` | field `serverListPinger`, and `ServerStatusPinger.add(...)`'s arity | "Refresh ping" does nothing |
-| `ui/GuiCompat` | `enableScissor` / `pose()` on the extractor | Rows spill past their band; overlays draw under the list |
+| File | What to check |
+|---|---|
+| `integration/FolderEntryDelegate` | `KeyEvent.key()` and `CharacterEvent.codepoint()` — read in one method each, so a wrong guess is a two-line fix |
+| `mixin/client/AbstractSelectionListMixin` | `getRowTop` / `getMaxPosition`, and that vanilla's row top really is `contentTop + index * itemHeight` |
+| `ui/GuiCompat` | `enableScissor` / `disableScissor` on the extractor |
 
-`FolderPackStub` deserves a second look. `PackListWidget` is an
-`EntryListWidget<ResourcePackEntry>`, so every row must be a pack entry and every
-pack entry must hold a pack. Rather than pass a null and hope nothing
-dereferences it, a folder row carries a stub whose accessors all answer something
-harmless and whose mutators do nothing — if a vanilla path ever does reach a
-folder row, it changes no pack state.
+Two things are known-wrong rather than unverified. `AbstractSelectionList.Entry`
+is protected, so the hit-testing injection had to go: during the ~200 ms a folder
+spends animating, a click is tested against vanilla's uniform row arithmetic and
+can land on the neighbouring row. And 26.2's pose stack is a `Matrix3x2fStack`,
+purely 2D, so there is no z-layer — the ghost preview and the context menu are on
+top only because they are drawn last.
 
 ---
 

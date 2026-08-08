@@ -293,11 +293,24 @@ public abstract class FolderListController<E> {
         drag.setTargets(dropTargets);
     }
 
+    /**
+     * Lets {@link #isDropTarget} ask "which folder is this target for?" without naming the inner
+     * class, which cannot be narrowed by {@code instanceof} from inside a generic outer class.
+     */
+    private interface FolderTarget {
+        UUID folderId();
+    }
+
     /** A folder row swallowing an item. Never accepts another folder. */
-    private final class FolderDropTarget implements DropTarget {
+    private final class FolderDropTarget implements DropTarget, FolderTarget {
         private final UUID folderId;
         private final int top;
         private final int bottom;
+
+        @Override
+        public UUID folderId() {
+            return folderId;
+        }
 
         private FolderDropTarget(DisplayRow.FolderRow row) {
             this.folderId = row.folder().id();
@@ -416,8 +429,8 @@ public abstract class FolderListController<E> {
 
     public boolean isDropTarget(Folder folder) {
         return drag.hoveredTarget()
-                .filter(target -> target instanceof FolderDropTarget folderTarget
-                        && folderTarget.folderId.equals(folder.id()))
+                .filter(target -> target instanceof FolderTarget folderTarget
+                        && folderTarget.folderId().equals(folder.id()))
                 .isPresent();
     }
 
@@ -513,7 +526,7 @@ public abstract class FolderListController<E> {
         items.add(FolderContextMenu.Item.of("folders.menu.delete", () -> deleteFolder(folder)));
 
         contextMenu = FolderContextMenu.open(items, mouseX, mouseY,
-                window.getScaledWidth(), window.getScaledHeight());
+                window.getGuiScaledWidth(), window.getGuiScaledHeight());
     }
 
     private void openIconMenu(Folder folder, int mouseX, int mouseY) {
@@ -524,7 +537,7 @@ public abstract class FolderListController<E> {
                         () -> FolderIconPicker.useDefault(repository, folder.id(), this::afterModelChange)),
                 FolderContextMenu.Item.of("folders.icon.choose",
                         () -> FolderIconPicker.chooseCustom(repository, folder.id(), this::afterModelChange))
-        ), mouseX, mouseY, window.getScaledWidth(), window.getScaledHeight());
+        ), mouseX, mouseY, window.getGuiScaledWidth(), window.getGuiScaledHeight());
     }
 
     public Optional<FolderContextMenu> contextMenu() {

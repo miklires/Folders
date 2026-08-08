@@ -12,14 +12,10 @@
   "client": [
     "AbstractSelectionListAccessor",
     "AbstractSelectionListMixin",
-    "JoinMultiplayerScreenAccessor",
     "JoinMultiplayerScreenMixin",
     "OnlineServerEntryAccessor",
-    "PackEntryAccessor",
-    "PackSelectionScreenMixin",
     "SelectWorldScreenMixin",
     "ServerSelectionListMixin",
-    "TransferableSelectionListMixin",
     "WorldListEntryAccessor",
     "WorldSelectionListMixin"
   ]

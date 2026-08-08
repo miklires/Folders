@@ -24,21 +24,22 @@ public final class FoldersListHooks {
      *
      * @param complete false while the list is still loading
      *
-     * <p>MAPPING NOTE: this mutates {@code children()} in place because the
-     * vanilla {@code clearEntries()} also resets scroll and selection, which would
-     * make the list jump every time a folder is renamed. If {@code children()}
-     * stops being publicly reachable, an accessor mixin on {@code AbstractSelectionList}
-     * is the replacement — not {@code clearEntries()}.
+     * <p>This mutates {@code children()} in place because the vanilla {@code clearEntries()} also
+     * resets scroll and selection, which would make the list jump every time a folder is renamed.
      */
-    public static <E extends AbstractSelectionList.Entry<E>> void applyEntries(
-            AbstractSelectionList<E> widget, FolderListController<E> controller, boolean complete) {
+    @SuppressWarnings("unchecked")
+    public static <E> void applyEntries(AbstractSelectionList<?> widget,
+                                        FolderListController<E> controller, boolean complete) {
 
         Folders.guarded("rebuilding a list", () -> {
-            List<E> vanilla = List.copyOf(widget.children());
-            List<E> ordered = controller.buildEntries(vanilla, complete);
+            // AbstractSelectionList.Entry is protected, so neither the bound nor the element type
+            // can be named from outside. The list is handled as List<Object> and the controller,
+            // which does know the concrete entry type, is trusted for the contents.
+            List<Object> children = (List<Object>) widget.children();
+            List<E> ordered = controller.buildEntries((List<E>) List.copyOf(children), complete);
 
-            widget.children().clear();
-            widget.children().addAll(ordered);
+            children.clear();
+            children.addAll((List<Object>) (List<?>) ordered);
 
             ((FoldersListAccess) widget).folders$setLayout(controller.layout());
         });

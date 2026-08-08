@@ -6,11 +6,9 @@ import dev.miklires.folders.client.integration.FoldersListHooks;
 import dev.miklires.folders.client.integration.server.ServerListIntegration;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,10 +27,6 @@ public abstract class ServerSelectionListMixin
         extends ObjectSelectionList<ServerSelectionList.Entry>
         implements FoldersControllerHost {
 
-    @Shadow
-    @org.spongepowered.asm.mixin.Final
-    private JoinMultiplayerScreen screen;
-
     @Unique
     private ServerListIntegration folders$integration;
 
@@ -44,10 +38,7 @@ public abstract class ServerSelectionListMixin
     private ServerListIntegration folders$integration() {
         if (folders$integration == null) {
             ServerSelectionList self = (ServerSelectionList) (Object) this;
-            folders$integration = new ServerListIntegration(self, () -> folders$apply(true),
-                    // The only line that knows the vanilla pinger's signature.
-                    (info, done) -> ((JoinMultiplayerScreenAccessor) screen).folders$serverListPinger()
-                            .add(info, done, done));
+            folders$integration = new ServerListIntegration(self, () -> folders$apply(true));
         }
         return folders$integration;
     }

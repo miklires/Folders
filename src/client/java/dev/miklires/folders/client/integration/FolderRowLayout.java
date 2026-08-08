@@ -20,14 +20,4 @@ public interface FolderRowLayout {
     /** Total content height, which is what drives the scrollbar. */
     int contentHeight();
 
-    /** @return the row index at a content-space y, or {@code -1} */
-    default int rowAt(int contentY) {
-        for (int i = 0; i < rowCount(); i++) {
-            int top = rowTop(i);
-            if (contentY >= top && contentY < top + rowHeight(i)) {
-                return i;
-            }
-        }
-        return -1;
-    }
 }
