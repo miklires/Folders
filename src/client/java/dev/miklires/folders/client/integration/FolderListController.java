@@ -587,8 +587,11 @@ public abstract class FolderListController<E> {
         }
         boolean inside = contextMenu.mouseClicked(mouseX, mouseY);
         if (!inside) {
+            // A click outside an open menu dismisses it and stops there. Letting it through as well
+            // would mean the click that closes the menu also selects whatever row was underneath —
+            // the one gesture doing two things, and the second one unasked for.
             contextMenu = null;
-            return false;
+            return true;
         }
         // An item that opened a submenu has already replaced the menu.
         if (contextMenu != null && !contextMenu.contains(mouseX, mouseY)) {
