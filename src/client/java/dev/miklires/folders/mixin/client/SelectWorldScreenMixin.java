@@ -26,12 +26,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("TAIL"))
     private void folders$addCreateButton(CallbackInfo info) {
-        Folders.guarded("adding the Create folder button", () -> addRenderableWidget(
-                CreateFolderButton.create(this,
-                        CreateFolderButton.MARGIN,
-                        CreateFolderButton.MARGIN,
-                        CreateFolderButton.DEFAULT_WIDTH,
-                        CreateFolderButton.DEFAULT_HEIGHT)));
+        Folders.guarded("adding the Create folder button", () -> addRenderableWidget(CreateFolderButton.place(this)));
     }
 
     /** Escape abandons a drag before it reaches the vanilla "close screen". */

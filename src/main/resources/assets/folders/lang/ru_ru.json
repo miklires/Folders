@@ -1,5 +1,6 @@
 {
   "folders.create": "Создать папку",
+  "folders.create.short": "Папка",
   "folders.create.tooltip": "Добавляет пустую папку в этот список. Перетащите в неё миры, серверы или паки.",
   "folders.default_name": "Новая папка",
   "folders.empty": "Пусто",

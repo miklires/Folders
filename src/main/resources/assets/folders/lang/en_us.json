@@ -1,5 +1,6 @@
 {
   "folders.create": "Create folder",
+  "folders.create.short": "New folder",
   "folders.create.tooltip": "Adds an empty folder to this list. Drag worlds, servers or packs into it.",
   "folders.default_name": "New folder",
   "folders.empty": "Empty",

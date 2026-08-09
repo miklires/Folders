@@ -157,13 +157,28 @@ public abstract class FolderListController<E> {
         }
         folderEntries.keySet().retainAll(live);
 
-        // Entries Minecraft has that no row claimed -- a loading header, or one whose resolver
-        // returned null -- are appended rather than silently hidden. Folder rows are excluded:
-        // they are already placed, and re-adding them is how a folder would multiply.
+        // Entries Minecraft has that no row claimed are appended rather than silently hidden --
+        // a loading header, or one whose resolver returned null. Two kinds are deliberately not
+        // appended:
+        //
+        //   * folder rows, which are already placed; re-adding them is how a folder multiplies;
+        //   * an item the model placed inside a *collapsed* folder. It has no row on purpose, and
+        //     appending it put every hidden world and server at the bottom of the list, which is
+        //     the one place they visibly do not belong.
+        //
+        // The test for the second is identity, not just the id: sync has seen every id by now, so
+        // an entry that is the canonical one for its id was accounted for by the layout either way.
+        // A second entry sharing an id -- two servers on one address -- is not represented in the
+        // model at all, and is appended so it cannot disappear.
         for (E entry : vanillaEntries) {
-            if (!(entry instanceof FolderRow) && !out.contains(entry)) {
-                out.add(entry);
+            if (entry instanceof FolderRow || out.contains(entry)) {
+                continue;
             }
+            String id = idOf(entry);
+            if (id != null && vanillaById.get(id) == entry) {
+                continue;
+            }
+            out.add(entry);
         }
         return out;
     }
