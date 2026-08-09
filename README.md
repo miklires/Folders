@@ -11,25 +11,23 @@ behaves exactly as it did before, with every world, server and pack where it was
 
 ## Status
 
-**The core is implemented and tested. Worlds and servers are written against
-real 26.2 signatures. Resource packs are not in the build.**
+**The core is implemented and tested. All three screens are written against
+real 26.2 signatures.**
 
-That split is what the environment allowed: `maven.fabricmc.net` and
-`libraries.minecraft.net` are blocked by the network policy where this was
-developed, so Gradle cannot resolve Loom or Minecraft here and the 26.2 mappings
-could not be consulted directly. The class and method names below were taken
-from ChatUtils, which targets the same version — so the shapes are real, but the
-parts ChatUtils does not itself use (the selection lists above all) are inferred.
-Rather than guess quietly, the mod is arranged so the guessing is confined to as
-few lines as possible.
+`maven.fabricmc.net` and `libraries.minecraft.net` are blocked by the network
+policy where this was developed, so Gradle cannot resolve Loom or Minecraft here
+and nothing can be compiled against the real jar. What replaced guessing is the
+`dumpApi` task below: it runs `javap` over the exact remapped jar on a machine
+that *can* reach those hosts, and every signature this mod depends on was read
+out of that dump. Where a name still had to be inferred it is marked
+`MAPPING NOTE` and read in exactly one place.
 
 | Layer | State |
 |---|---|
-| `core/` — model, storage, identity, drag, animation, layout | Compiled and unit tested, 63 tests green |
+| `core/` — model, storage, identity, drag, animation, layout, profiles | Compiled and unit tested, 74 tests green |
 | Worlds, servers — rows, drag, rename, context menu | Written against real 26.2 signatures |
+| Resource packs — folders, profiles | Written against real 26.2 signatures |
 | Drag and drop, context menu clicks | Routed through `AbstractContainerWidget` |
-| Resource packs | **Removed from the build**, see below |
-| Server ping / online dot | **Disabled**, see below |
 | Textures, translations, manifests | Present |
 
 ### What is switched off, and why
@@ -39,12 +37,12 @@ few lines as possible.
   the accordion has to drive each entry's own height instead of the list's
   arithmetic. Until then folders open and close instantly. The animation code in
   `core` is unchanged and tested; only the integration bypasses it.
-- **Resource pack folders.** Now unblocked by `dumpApi`:
-  `TransferableSelectionList.PackEntry` is an inner class constructed as
-  `list.new PackEntry(minecraft, list, pack)`, `PackSelectionModel.Entry` is a
-  known interface, and `updateList` is the rebuild hook. Not yet rewritten.
 - **"Refresh ping".** `ServerStatusPinger.pingServer` takes an
   `EventLoopGroupHolder` this mod has no clean way to obtain.
+- **Dragging packs into folders.** The pack screen's folder rows are vanilla
+  widgets and do not expose their own bounds, so there is nothing to hit-test a
+  drop against. Right-clicking a pack files it, which is the same gesture the
+  other two screens offer.
 
 The online dot and count are back: 26.2 dropped `ServerData.online` but kept
 `ping`, which is what the dot actually means.
@@ -116,14 +114,16 @@ src/main/java/dev/miklires/folders/
     ├── identity/           ItemIdentity — the id rules
     ├── drag/               DragManager, DragState, DragPayload, DropTarget
     ├── animation/          Animation, Easing
+    ├── profile/            PackProfile, PackProfileStore — saved pack sets
     └── view/               FolderViewModel, DisplayRow — the accordion layout
 
 src/client/java/dev/miklires/folders/
 ├── client/config/          FoldersConfig (YACL), ConfigScreen
 ├── client/identity/        LevelSummary / ServerData / PackSelectionModel -> id
-├── client/ui/              GuiCompat, FolderRowRenderer, GhostRenderer,
+├── client/ui/              GuiCompat, FolderRowRenderer, GhostRenderer, Gutter,
 │                           FolderContextMenu, IconManager, FolderIconPicker
 ├── client/integration/     FolderListController + one subclass per screen
+│   └── pack/               FolderPack, PackProfiles, PackScreens
 └── mixin/client/           thin injection points only
 ```
 
@@ -145,10 +145,13 @@ there carry the whole mod's rendering, so the next time that happens it is a
 one-file fix rather than a hunt through the renderer, the entries and the menu.
 Files needing a check against real mappings are all marked `MAPPING NOTE`.
 
-**Folder rows are `FolderEntryDelegate` plus a five-line shell per screen.** The
-three shells subclass whatever entry type their list demands; everything they do
-lives in the shared delegate. Nothing is designed around one particular selection-list entry class, which is
-the part most likely to be renamed out from under the mod.
+**Nothing is designed around one particular selection-list entry class**, which
+is the part most likely to be renamed out from under the mod. The world and
+server rows are `FolderEntryDelegate` plus a five-line shell that subclasses
+whatever entry type their list demands. The pack screen does not subclass
+anything at all: a folder there is a `PackSelectionModel.Entry`, a small public
+interface, handed to vanilla's own row widget — so Minecraft draws the folder and
+this mod draws nothing.
 
 ---
 
@@ -234,18 +237,43 @@ from the view model's own layout. Those are two different coordinate spaces, and
 the difference between them is exactly the scroll offset — so computing them
 would mean every drop landing on the wrong folder as soon as the list scrolls.
 
-**Resource packs are the interesting case **, because vanilla already uses
-drag there to move packs between the two lists. The two modes are split by area,
-not by heuristics: a drag starting on the pack's 32 px icon is a Folders drag,
-a drag starting anywhere else on the row is the vanilla one.
+Resource packs are left out of this deliberately. Vanilla already uses drag on
+that screen to move packs between the two lists, and folder rows there are
+vanilla widgets that do not expose their bounds, so there is nothing to hit-test
+a drop against. Right-clicking a pack files it instead.
 
 ### Resource pack folders
 
 The pack screen is two lists and a pack is physically in one of them. A folder is
 remembered per pack id, so it appears in whichever list its packs are in — the
 same folder can show on both sides, each showing only the packs on that side.
-Enable/disable always goes through `ResourcePackOrganizer`; Minecraft stays the
-source of truth for what is on, and the folder stores no copy of it.
+Because each side sees half the model, neither ever prunes: syncing the available
+list against the full config would conclude that every enabled pack had been
+deleted.
+
+A folder row here is a `FolderPack` — an implementation of
+`PackSelectionModel.Entry` whose title is the folder name, whose description is
+the count, and whose every mutating method is a no-op. Vanilla builds an ordinary
+row from it, so folders on this screen are drawn by the game rather than by the
+mod, and there is no custom rendering to break. `PackEntryMixin` recognises the
+row by its id and decides what a click means; nothing a folder row can be asked
+to do reaches the pack repository.
+
+Renaming uses a real `EditBox` in the gutter rather than an in-row editor. Pack
+rows are vanilla widgets built once from a title — there is nowhere in one to put
+a caret, and no character events to read.
+
+### Pack profiles
+
+A profile is a named set of enabled packs. Applying one turns off what is not in
+it and turns on what is, in order, entirely through `PackSelectionModel` — the
+same calls clicking the arrows makes. Minecraft stays the source of truth for
+what is on; a profile stores nothing but a list of ids, so a pack that has since
+been deleted is simply skipped, and uninstalling the mod leaves the pack setup
+exactly as the last applied profile left it.
+
+They live in `config/folders/pack_profiles.json`, apart from the folders: a
+corrupt profile should cost profiles, not folders.
 
 ### Icons
 
@@ -297,6 +325,7 @@ getter this mod has found yet.
 ├── worlds.json
 ├── servers.json
 ├── resource_packs.json
+├── pack_profiles.json
 └── icons/
     └── <folder-uuid>.png
 

@@ -4,6 +4,7 @@ import dev.miklires.folders.core.FoldersData;
 import dev.miklires.folders.core.data.FolderRepository;
 import dev.miklires.folders.core.data.FolderType;
 import dev.miklires.folders.core.drag.DragManager;
+import dev.miklires.folders.core.profile.PackProfileStore;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public final class Folders {
     private static final DragManager DRAG_MANAGER = new DragManager();
 
     private static FoldersData data;
+    private static PackProfileStore profiles;
 
     private Folders() {
     }
@@ -50,6 +52,21 @@ public final class Folders {
 
     public static FolderRepository repository(FolderType type) {
         return data().repository(type);
+    }
+
+    /**
+     * The resource pack profiles, loaded on first use.
+     *
+     * <p>Kept apart from {@link FoldersData} because it answers a different question. Folders say
+     * where a pack is filed and are read on three screens; profiles say which packs are switched on
+     * together and are read on one. Sharing a file would mean a corrupt profile costing someone
+     * their folders.
+     */
+    public static PackProfileStore profiles() {
+        if (profiles == null) {
+            profiles = PackProfileStore.load(data().storage().directory());
+        }
+        return profiles;
     }
 
     public static DragManager dragManager() {

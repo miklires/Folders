@@ -43,8 +43,10 @@ public final class FoldersListHooks {
         // confirmed getter, and the only consumer is drop-target hit testing, which is not wired
         // up yet. It becomes real the moment drag does.
         ScreenFolders.setActive(controller);
-        Folders.guarded("updating folder animations", () ->
-                controller.tick(widget.getRowLeft(), widget.getY(), widget.getRowWidth(), 0.0));
+        Folders.guarded("updating folder animations", () -> {
+            controller.beforeRenderHook();
+            controller.tick(widget.getRowLeft(), widget.getY(), widget.getRowWidth(), 0.0);
+        });
     }
 
     /** Ghost preview and context menu, drawn above the list. Call at the tail of render. */

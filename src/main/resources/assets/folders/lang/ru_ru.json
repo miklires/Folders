@@ -36,5 +36,15 @@
   "folders.settings.show_tooltips": "Показывать подсказки",
   "folders.menu.move_to": "В папку «%s»",
   "folders.menu.move_out": "Убрать из папки",
-  "folders.menu.no_folders": "Папок пока нет"
+  "folders.menu.no_folders": "Папок пока нет",
+  "folders.rename.folder": "Название папки",
+  "folders.profile.button": "Профили",
+  "folders.profile.button.tooltip": "Сохранённые наборы включённых паков. Применение включает ровно эти паки, в том же порядке.",
+  "folders.profile.save_current": "Сохранить текущий набор",
+  "folders.profile.default_name": "Профиль",
+  "folders.profile.none": "Профилей пока нет",
+  "folders.profile.apply": "Применить «%s»",
+  "folders.profile.overwrite": "Перезаписать текущим",
+  "folders.profile.rename": "Переименовать профиль",
+  "folders.profile.delete": "Удалить профиль"
 }

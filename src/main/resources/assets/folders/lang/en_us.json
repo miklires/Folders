@@ -36,5 +36,15 @@
   "folders.settings.show_tooltips": "Show tooltips",
   "folders.menu.move_to": "Move to %s",
   "folders.menu.move_out": "Remove from folder",
-  "folders.menu.no_folders": "No folders yet"
+  "folders.menu.no_folders": "No folders yet",
+  "folders.rename.folder": "Folder name",
+  "folders.profile.button": "Profiles",
+  "folders.profile.button.tooltip": "Saved sets of enabled packs. Applying one turns exactly those packs on, in order.",
+  "folders.profile.save_current": "Save current set",
+  "folders.profile.default_name": "Profile",
+  "folders.profile.none": "No profiles yet",
+  "folders.profile.apply": "Apply «%s»",
+  "folders.profile.overwrite": "Overwrite with current",
+  "folders.profile.rename": "Rename profile",
+  "folders.profile.delete": "Delete profile"
 }

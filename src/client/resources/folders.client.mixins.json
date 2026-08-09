@@ -14,8 +14,12 @@
     "AbstractSelectionListMixin",
     "JoinMultiplayerScreenMixin",
     "OnlineServerEntryMixin",
+    "PackEntryMixin",
+    "PackSelectionScreenAccessor",
+    "PackSelectionScreenMixin",
     "SelectWorldScreenMixin",
     "ServerSelectionListMixin",
+    "TransferableSelectionListMixin",
     "WorldListEntryMixin",
     "WorldSelectionListMixin"
   ]

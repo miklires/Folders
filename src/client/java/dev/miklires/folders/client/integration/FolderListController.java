@@ -111,6 +111,17 @@ public abstract class FolderListController<E> {
     /** Wraps a folder in whatever entry class this screen's list requires. */
     protected abstract E createFolderEntry(Folder folder);
 
+    /**
+     * Whether an entry is one of this controller's own folder rows.
+     *
+     * <p>Two screens can answer with a marker interface on the row class. The pack screen cannot:
+     * its folder rows are vanilla widgets, indistinguishable from a pack except by the id they
+     * carry, so it overrides this.
+     */
+    protected boolean isFolderRow(E entry) {
+        return entry instanceof FolderRow;
+    }
+
     // ------------------------------------------------------------------
     // Building the list
     // ------------------------------------------------------------------
@@ -126,7 +137,7 @@ public abstract class FolderListController<E> {
     public List<E> buildEntries(List<E> vanillaEntries, boolean complete) {
         vanillaById.clear();
         for (E entry : vanillaEntries) {
-            if (entry instanceof FolderRow) {
+            if (isFolderRow(entry)) {
                 // A rebuild hands back the children from the previous pass, folder rows included.
                 continue;
             }
@@ -171,7 +182,7 @@ public abstract class FolderListController<E> {
         // A second entry sharing an id -- two servers on one address -- is not represented in the
         // model at all, and is appended so it cannot disappear.
         for (E entry : vanillaEntries) {
-            if (entry instanceof FolderRow || out.contains(entry)) {
+            if (isFolderRow(entry) || out.contains(entry)) {
                 continue;
             }
             String id = idOf(entry);
@@ -243,6 +254,15 @@ public abstract class FolderListController<E> {
      * the list's render; does no file IO and allocates nothing per row beyond the
      * target list.
      */
+    /**
+     * Anything a screen needs to check once a frame before the rows are read.
+     *
+     * <p>Empty for worlds and servers, which are told when their list changes. Runs at the head of
+     * the list's render, so a controller may still swap the widget's children here.
+     */
+    protected void beforeRenderHook() {
+    }
+
     public void tick(int listX, int listTop, int rowWidth, double scrollAmount) {
         this.listX = listX;
         this.listTop = listTop;
@@ -464,6 +484,18 @@ public abstract class FolderListController<E> {
         afterModelChange();
     }
 
+    /**
+     * How this screen asks the player for a new folder name.
+     *
+     * <p>Worlds and servers edit the name in the row itself. The pack screen cannot: its rows are
+     * vanilla widgets built once from a title, with no hook for a caret and no way to reach the
+     * character events. It overrides this to open a real text field instead — the gesture differs,
+     * the menu item does not.
+     */
+    protected void requestRename(Folder folder) {
+        beginRename(folder.id());
+    }
+
     public void beginRename(UUID folderId) {
         this.renaming = folderId;
     }
@@ -490,6 +522,18 @@ public abstract class FolderListController<E> {
         return true;
     }
 
+    /**
+     * Throws away the cached folder rows so the next rebuild makes fresh ones.
+     *
+     * <p>Only screens whose rows snapshot their contents at construction need this. A world or
+     * server folder row reads the folder every frame and never goes stale; a pack folder row is a
+     * vanilla widget built once from a title and a description, so a rename or a moved pack has to
+     * rebuild it to be seen.
+     */
+    protected void clearFolderEntries() {
+        folderEntries.clear();
+    }
+
     /** Persists and refreshes. The only place either happens. */
     protected void afterModelChange() {
         Folders.data().saveIfDirty(type);
@@ -508,7 +552,6 @@ public abstract class FolderListController<E> {
      * worth shipping.
      */
     public void openMoveMenu(String itemId, int mouseX, int mouseY) {
-        Window window = Minecraft.getInstance().getWindow();
         List<FolderContextMenu.Item> items = new ArrayList<>();
 
         Optional<Folder> current = repository.folderContaining(itemId);
@@ -533,8 +576,7 @@ public abstract class FolderListController<E> {
             items.add(FolderContextMenu.Item.of("folders.menu.no_folders", () -> {
             }, false));
         }
-        contextMenu = FolderContextMenu.open(items, mouseX, mouseY,
-                window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        showMenu(items, mouseX, mouseY);
     }
 
     /**
@@ -566,31 +608,37 @@ public abstract class FolderListController<E> {
     }
 
     public void openContextMenu(Folder folder, int mouseX, int mouseY) {
-        Minecraft client = Minecraft.getInstance();
-        Window window = client.getWindow();
-
         List<FolderContextMenu.Item> items = new ArrayList<>();
         items.add(FolderContextMenu.Item.of(
                 folder.expanded() ? "folders.menu.collapse" : "folders.menu.expand",
                 () -> toggle(folder, mouseY)));
-        items.add(FolderContextMenu.Item.of("folders.menu.rename", () -> beginRename(folder.id())));
+        items.add(FolderContextMenu.Item.of("folders.menu.rename", () -> requestRename(folder)));
         items.add(FolderContextMenu.Item.of("folders.menu.icon", () -> openIconMenu(folder, mouseX, mouseY)));
         items.addAll(typeMenuItems(folder));
         items.add(FolderContextMenu.Item.of("folders.menu.delete", () -> deleteFolder(folder)));
 
-        contextMenu = FolderContextMenu.open(items, mouseX, mouseY,
-                window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        showMenu(items, mouseX, mouseY);
     }
 
     private void openIconMenu(Folder folder, int mouseX, int mouseY) {
-        Minecraft client = Minecraft.getInstance();
-        Window window = client.getWindow();
-        contextMenu = FolderContextMenu.open(List.of(
+        showMenu(List.of(
                 FolderContextMenu.Item.of("folders.icon.default",
                         () -> FolderIconPicker.useDefault(repository, folder.id(), this::afterModelChange)),
                 FolderContextMenu.Item.of("folders.icon.choose",
                         () -> FolderIconPicker.chooseCustom(repository, folder.id(), this::afterModelChange))
-        ), mouseX, mouseY, window.getGuiScaledWidth(), window.getGuiScaledHeight());
+        ), mouseX, mouseY);
+    }
+
+    /**
+     * Opens an arbitrary menu on this list.
+     *
+     * <p>The menu is drawn and clicked through the list this controller belongs to, so anything
+     * wanting a popup on one of these screens goes through here rather than growing its own.
+     */
+    public void showMenu(List<FolderContextMenu.Item> items, int mouseX, int mouseY) {
+        Window window = Minecraft.getInstance().getWindow();
+        contextMenu = FolderContextMenu.open(items, mouseX, mouseY,
+                window.getGuiScaledWidth(), window.getGuiScaledHeight());
     }
 
     public Optional<FolderContextMenu> contextMenu() {
