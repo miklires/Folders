@@ -1,33 +1,30 @@
 package dev.miklires.folders.client.integration;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.screens.Screen;
-
 import java.util.Optional;
 
 /**
- * Finds the folder controller for whatever screen is currently open.
+ * The folder controller for the list currently on screen.
  *
- * <p>A vanilla row has no reference to the list holding it that Folders can reach without shadowing
- * a private field, and those fields are precisely what moves between versions. The open screen does
- * know its widgets, so the question is asked there instead.
+ * <p>A vanilla row holds its list in a private field, and reaching it would mean shadowing a name
+ * that has already moved once in this version. Nothing needs to be looked up, though: the list sets
+ * this as it draws, so by the time a click arrives the value is the list that click landed in.
+ *
+ * <p>Single-valued because the two screens Folders extends have one folder list each. The pack
+ * screen has two, and will need this keyed by list when pack folders land.
  */
 public final class ScreenFolders {
+
+    private static FolderListController<?> active;
 
     private ScreenFolders() {
     }
 
+    /** Called from the list's draw, every frame. */
+    static void setActive(FolderListController<?> controller) {
+        active = controller;
+    }
+
     public static Optional<FolderListController<?>> current() {
-        Screen screen = Minecraft.getInstance().screen;
-        if (screen == null) {
-            return Optional.empty();
-        }
-        for (GuiEventListener child : screen.children()) {
-            if (child instanceof FoldersControllerHost host) {
-                return Optional.of(host.folders$controller());
-            }
-        }
-        return Optional.empty();
+        return Optional.ofNullable(active);
     }
 }

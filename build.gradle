@@ -132,6 +132,8 @@ tasks.register("dumpApi") {
                 "net.minecraft.client.input.KeyEvent",
                 "net.minecraft.client.input.CharacterEvent",
                 "net.minecraft.client.input.MouseButtonEvent",
+                "net.minecraft.client.Minecraft",
+                "net.minecraft.client.gui.components.AbstractWidget",
         ]
 
         def javap = java.util.spi.ToolProvider.findFirst("javap")

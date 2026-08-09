@@ -42,6 +42,7 @@ public final class FoldersListHooks {
         // Scroll offset is passed as 0: AbstractSelectionList exposes setScrollAmount but no
         // confirmed getter, and the only consumer is drop-target hit testing, which is not wired
         // up yet. It becomes real the moment drag does.
+        ScreenFolders.setActive(controller);
         Folders.guarded("updating folder animations", () ->
                 controller.tick(widget.getRowLeft(), widget.getY(), widget.getRowWidth(), 0.0));
     }
