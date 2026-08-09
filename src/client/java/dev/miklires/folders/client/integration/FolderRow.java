@@ -13,4 +13,17 @@ import dev.miklires.folders.core.data.Folder;
 public interface FolderRow {
 
     Folder folder();
+
+    /**
+     * Top of the row in screen space, as the list actually placed it.
+     *
+     * <p>Read off the widget rather than computed, because those are two different numbers. The
+     * view model lays folders out in its own coordinate space; the list then positions rows by
+     * walking its children and accumulating heights, and applies its own scroll. Asking the row
+     * where it ended up is the only answer that stays right while the list is scrolled — which is
+     * exactly when a drop landing on the wrong folder would be hardest to notice.
+     */
+    int rowTop();
+
+    int rowBottom();
 }

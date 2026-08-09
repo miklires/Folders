@@ -267,9 +267,11 @@ public abstract class FolderListController<E> {
 
     private void refreshDropTargets() {
         dropTargets.clear();
-        for (DisplayRow row : rows) {
-            if (row instanceof DisplayRow.FolderRow folderRow) {
-                dropTargets.add(new FolderDropTarget(folderRow));
+        for (E entry : folderEntries.values()) {
+            // Bounds come off the widget, not the view model: the list places rows itself and
+            // applies its own scroll, so its answer is the only one that survives scrolling.
+            if (entry instanceof FolderRow row) {
+                dropTargets.add(new FolderDropTarget(row.folder().id(), row.rowTop(), row.rowBottom()));
             }
         }
         // The root itself accepts anything dragged out of a folder.
@@ -296,10 +298,10 @@ public abstract class FolderListController<E> {
             return folderId;
         }
 
-        private FolderDropTarget(DisplayRow.FolderRow row) {
-            this.folderId = row.folder().id();
-            this.top = screenY(row);
-            this.bottom = this.top + row.height();
+        private FolderDropTarget(UUID folderId, int top, int bottom) {
+            this.folderId = folderId;
+            this.top = top;
+            this.bottom = bottom;
         }
 
         @Override
@@ -356,7 +358,10 @@ public abstract class FolderListController<E> {
             if (!(payload instanceof DragPayload.Item item)) {
                 return;
             }
-            repository.moveToRoot(item.itemId(), rootIndexAt(drag.mouseY()));
+            // Appended rather than dropped at the pointer: working out which root slot a y belongs
+            // to needs the list's scroll offset, and 26.2 exposes a setter for it but no getter yet.
+            // An item that lands in a predictable place beats one that lands in the wrong place.
+            repository.moveToRoot(item.itemId(), -1);
             afterModelChange();
         }
 
@@ -369,22 +374,6 @@ public abstract class FolderListController<E> {
         public boolean highlightWhenHovered() {
             return false;
         }
-    }
-
-    /** Which root position a screen-space y corresponds to. */
-    private int rootIndexAt(double mouseY) {
-        int contentY = (int) (mouseY - listTop + scrollAmount);
-        int index = 0;
-        for (DisplayRow row : rows) {
-            if (row instanceof DisplayRow.ItemRow item && item.isInFolder()) {
-                continue;
-            }
-            if (contentY < row.y() + row.height() / 2) {
-                return index;
-            }
-            index++;
-        }
-        return -1;
     }
 
     /** Starts a potential drag; the gesture is still a click until it moves. */
@@ -531,6 +520,23 @@ public abstract class FolderListController<E> {
         }
         contextMenu = FolderContextMenu.open(items, mouseX, mouseY,
                 window.getGuiScaledWidth(), window.getGuiScaledHeight());
+    }
+
+    /**
+     * Arms a drag on a vanilla row without consuming the click.
+     *
+     * <p>Called from the row's own {@code mouseClicked}, before vanilla handles it, so a press that
+     * never travels 5 px still selects the world or the server exactly as it always did. Only once
+     * the pointer moves does {@link DragManager} promote it to a drag and start swallowing events.
+     */
+    public void pressVanilla(Object entry, double mouseX, double mouseY) {
+        String id = identify(entry);
+        if (id == null) {
+            return;
+        }
+        @SuppressWarnings("unchecked")
+        E typed = (E) entry;
+        pressItem(id, displayNameOf(typed), mouseX, mouseY);
     }
 
     /** The id this controller would give a vanilla row, or null if it has none. */

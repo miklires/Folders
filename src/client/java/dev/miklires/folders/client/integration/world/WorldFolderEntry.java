@@ -35,6 +35,16 @@ public final class WorldFolderEntry extends WorldSelectionList.Entry implements 
     }
 
     @Override
+    public int rowTop() {
+        return getContentY();
+    }
+
+    @Override
+    public int rowBottom() {
+        return getContentY() + getContentHeight();
+    }
+
+    @Override
     public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY,
                                boolean hovered, float delta) {
         delegate.render(graphics, getX(), getContentY(), getContentWidth(), getContentHeight(),

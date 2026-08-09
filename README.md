@@ -27,6 +27,7 @@ few lines as possible.
 |---|---|
 | `core/` — model, storage, identity, drag, animation, layout | Compiled and unit tested, 63 tests green |
 | Worlds, servers — rows, drag, rename, context menu | Written against real 26.2 signatures |
+| Drag and drop, context menu clicks | Routed through `AbstractContainerWidget` |
 | Resource packs | **Removed from the build**, see below |
 | Server ping / online dot | **Disabled**, see below |
 | Textures, translations, manifests | Present |
@@ -38,12 +39,6 @@ few lines as possible.
   the accordion has to drive each entry's own height instead of the list's
   arithmetic. Until then folders open and close instantly. The animation code in
   `core` is unchanged and tested; only the integration bypasses it.
-- **Drag and drop.** Neither selection list overrides `mouseDragged` or
-  `mouseReleased`, so there is nowhere on them to inject; the hook belongs on
-  `AbstractWidget` or the screen, and neither has been checked yet. In the
-  meantime items go into folders by **right-clicking a world or server**, which
-  uses only confirmed API and works from the keyboard too. Dragging is still the
-  nicer gesture and is still the plan.
 - **Resource pack folders.** Now unblocked by `dumpApi`:
   `TransferableSelectionList.PackEntry` is an inner class constructed as
   `list.new PackEntry(minecraft, list, pack)`, `PackSelectionModel.Entry` is a
@@ -226,6 +221,19 @@ One `DragManager` for all three screens. A press is not a drag until the pointer
 travels 5 px, so a click on a world still opens the world and a click on a folder
 still opens the folder.
 
+All three mouse events arrive at `AbstractContainerWidget`, the selection lists'
+common parent — the lists themselves declare none of them, which is what made
+this look impossible at first. A press on a vanilla row arms the drag from the
+row's own `mouseClicked` and then returns without cancelling, so an ordinary
+click is untouched; only once the drag is real does the list start swallowing
+events. Right-clicking a world or server still opens the same move-to-folder
+menu, which works from the keyboard and does not depend on a steady hand.
+
+Drop targets are read off the folder rows the list actually placed, not computed
+from the view model's own layout. Those are two different coordinate spaces, and
+the difference between them is exactly the scroll offset — so computing them
+would mean every drop landing on the wrong folder as soon as the list scrolls.
+
 **Resource packs are the interesting case **, because vanilla already uses
 drag there to move packs between the two lists. The two modes are split by area,
 not by heuristics: a drag starting on the pack's 32 px icon is a Folders drag,
@@ -277,7 +285,10 @@ behind the Mod Menu cog (YACL, `config/folders.json`).
 
 Root-level reordering of loose *items* by drag is not wired up either; dragging
 between folders and the root is, and ordering *inside* a folder is. The data
-model already supports it.
+model already supports it. An item dragged out of a folder is appended to the
+root rather than dropped at the pointer, because working out which root slot a y
+belongs to needs the list's scroll offset and 26.2 exposes a setter for it but no
+getter this mod has found yet.
 
 ## Layout on disk
 
