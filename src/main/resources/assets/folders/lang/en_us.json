@@ -2,18 +2,15 @@
   "folders.create": "Create folder",
   "folders.create.tooltip": "Adds an empty folder to this list. Drag worlds, servers or packs into it.",
   "folders.default_name": "New folder",
-
   "folders.empty": "Empty",
   "folders.drop_here": "Drop here",
   "folders.refreshing": "Refreshing…",
   "folders.stats.join": "%s · %s",
-
   "folders.count.worlds": "Worlds: %s",
   "folders.count.servers": "Servers: %s",
   "folders.count.packs": "Packs: %s",
   "folders.count.online": "Online: %s",
   "folders.count.enabled": "Enabled: %s",
-
   "folders.menu.expand": "Open",
   "folders.menu.collapse": "Collapse",
   "folders.menu.rename": "Rename",
@@ -22,22 +19,21 @@
   "folders.menu.refresh_ping": "Refresh ping",
   "folders.menu.enable_all": "Enable all",
   "folders.menu.disable_all": "Disable all",
-
   "folders.icon.default": "Default",
   "folders.icon.choose": "Choose PNG",
   "folders.icon.reset": "Reset",
-
   "folders.state.expanded": "open",
   "folders.state.collapsed": "closed",
   "folders.narration": "%s, folder, %s, %s",
-
   "folders.tooltip.left_click": "Left click — open",
   "folders.tooltip.right_click": "Right click — actions",
-
   "folders.settings.title": "Folders",
   "folders.settings.animations": "Animations",
   "folders.settings.animation_speed": "Animation speed",
   "folders.settings.show_statistics": "Show statistics",
   "folders.settings.show_online_indicator": "Show online indicator",
-  "folders.settings.show_tooltips": "Show tooltips"
+  "folders.settings.show_tooltips": "Show tooltips",
+  "folders.menu.move_to": "Move to %s",
+  "folders.menu.move_out": "Remove from folder",
+  "folders.menu.no_folders": "No folders yet"
 }

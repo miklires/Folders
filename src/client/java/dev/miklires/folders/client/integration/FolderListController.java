@@ -496,6 +496,54 @@ public abstract class FolderListController<E> {
     // Context menu
     // ------------------------------------------------------------------
 
+    /**
+     * The menu a vanilla row gets on right-click: which folder to move it into.
+     *
+     * <p>This is how items get into folders. Dragging is the nicer gesture and is still the plan,
+     * but the list widgets expose no drag hook, and a folder you cannot put anything into is not
+     * worth shipping.
+     */
+    public void openMoveMenu(String itemId, int mouseX, int mouseY) {
+        Window window = Minecraft.getInstance().getWindow();
+        List<FolderContextMenu.Item> items = new ArrayList<>();
+
+        Optional<Folder> current = repository.folderContaining(itemId);
+        for (Folder folder : repository.folders()) {
+            if (current.filter(owner -> owner.equals(folder)).isPresent()) {
+                continue;
+            }
+            items.add(new FolderContextMenu.Item(
+                    Component.translatable("folders.menu.move_to", folder.name()),
+                    () -> {
+                        repository.moveToFolder(itemId, folder.id(), -1);
+                        afterModelChange();
+                    },
+                    true));
+        }
+        current.ifPresent(owner -> items.add(FolderContextMenu.Item.of("folders.menu.move_out", () -> {
+            repository.moveToRoot(itemId, -1);
+            afterModelChange();
+        })));
+
+        if (items.isEmpty()) {
+            items.add(FolderContextMenu.Item.of("folders.menu.no_folders", () -> {
+            }, false));
+        }
+        contextMenu = FolderContextMenu.open(items, mouseX, mouseY,
+                window.getGuiScaledWidth(), window.getGuiScaledHeight());
+    }
+
+    /** The id this controller would give a vanilla row, or null if it has none. */
+    public String identify(Object entry) {
+        try {
+            @SuppressWarnings("unchecked")
+            E typed = (E) entry;
+            return idOf(typed);
+        } catch (ClassCastException mismatch) {
+            return null;
+        }
+    }
+
     public void openContextMenu(Folder folder, int mouseX, int mouseY) {
         Minecraft client = Minecraft.getInstance();
         Window window = client.getWindow();

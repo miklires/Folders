@@ -39,10 +39,11 @@ few lines as possible.
   arithmetic. Until then folders open and close instantly. The animation code in
   `core` is unchanged and tested; only the integration bypasses it.
 - **Drag and drop.** Neither selection list overrides `mouseDragged` or
-  `mouseReleased`, so there is nowhere on them to inject. The hook belongs on
-  `AbstractWidget` or the screen, and neither has been checked yet. Until it is,
-  items cannot be put into folders by dragging — which is currently the only way
-  in, so this is the next thing worth doing.
+  `mouseReleased`, so there is nowhere on them to inject; the hook belongs on
+  `AbstractWidget` or the screen, and neither has been checked yet. In the
+  meantime items go into folders by **right-clicking a world or server**, which
+  uses only confirmed API and works from the keyboard too. Dragging is still the
+  nicer gesture and is still the plan.
 - **Resource pack folders.** Now unblocked by `dumpApi`:
   `TransferableSelectionList.PackEntry` is an inner class constructed as
   `list.new PackEntry(minecraft, list, pack)`, `PackSelectionModel.Entry` is a

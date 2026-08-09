@@ -12,8 +12,10 @@
   "client": [
     "AbstractSelectionListMixin",
     "JoinMultiplayerScreenMixin",
+    "OnlineServerEntryMixin",
     "SelectWorldScreenMixin",
     "ServerSelectionListMixin",
+    "WorldListEntryMixin",
     "WorldSelectionListMixin"
   ]
 }
