@@ -30,7 +30,7 @@ public abstract class ServerSelectionListMixin implements FoldersControllerHost 
         if (folders$integration == null) {
             ServerSelectionList self = (ServerSelectionList) (Object) this;
             folders$integration = new ServerListIntegration(self,
-                    () -> folders$apply(self, true));
+                    () -> folders$applyCached(self));
         }
         return folders$integration;
     }
@@ -44,6 +44,12 @@ public abstract class ServerSelectionListMixin implements FoldersControllerHost 
     private void folders$apply(ServerSelectionList self, boolean complete) {
         Folders.guarded("rebuilding the list", () ->
                 self.replaceEntries(FoldersListHooks.orderedEntries(self, folders$integration(), complete)));
+    }
+
+    @Unique
+    private void folders$applyCached(ServerSelectionList self) {
+        Folders.guarded("rebuilding the cached server list", () ->
+                self.replaceEntries(FoldersListHooks.cachedEntries(folders$integration())));
     }
 
     @Override

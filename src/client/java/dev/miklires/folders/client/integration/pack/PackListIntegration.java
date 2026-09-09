@@ -110,6 +110,11 @@ public final class PackListIntegration extends FolderListController<Object> {
         });
     }
 
+    @Override
+    protected boolean externalRenameInProgress() {
+        return PackRenameBar.isActive();
+    }
+
     /**
      * A pack folder row snapshots its title and description when it is built, so any change to the
      * model has to throw the rows away rather than expect them to notice.
@@ -164,6 +169,13 @@ public final class PackListIntegration extends FolderListController<Object> {
             // would delete the other half from every folder.
             List<Object> ordered = FoldersListHooks.orderedEntries(widget, this, false);
             replaceEntries(ordered);
+            lastApplied = currentChildren();
+        });
+    }
+
+    void applyCached() {
+        Folders.guarded("rebuilding the cached resource pack list", () -> {
+            replaceEntries(FoldersListHooks.cachedEntries(this));
             lastApplied = currentChildren();
         });
     }

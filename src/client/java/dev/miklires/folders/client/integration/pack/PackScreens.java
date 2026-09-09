@@ -36,7 +36,7 @@ public final class PackScreens {
 
     public static void rebuildAll() {
         for (PackListIntegration list : List.copyOf(LISTS)) {
-            list.apply();
+            list.applyCached();
         }
     }
 

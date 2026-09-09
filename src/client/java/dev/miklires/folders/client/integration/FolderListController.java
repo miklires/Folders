@@ -16,6 +16,8 @@ import dev.miklires.folders.client.ui.FolderRowRenderer;
 import dev.miklires.folders.client.ui.FolderStats;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.platform.Window;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -49,6 +51,8 @@ public abstract class FolderListController<E> {
 
     /** Vanilla entries by stable id, in vanilla order. */
     private final Map<String, E> vanillaById = new LinkedHashMap<>();
+    /** Last vanilla-authored list, excluding our rows; internal redraws must use this snapshot. */
+    private List<E> vanillaSnapshot = List.of();
     private final Map<UUID, E> folderEntries = new LinkedHashMap<>();
 
     private List<DisplayRow> rows = List.of();
@@ -135,12 +139,11 @@ public abstract class FolderListController<E> {
      *                       references are kept rather than pruned
      */
     public List<E> buildEntries(List<E> vanillaEntries, boolean complete) {
+        vanillaSnapshot = vanillaEntries.stream()
+                .filter(entry -> !isFolderRow(entry))
+                .toList();
         vanillaById.clear();
-        for (E entry : vanillaEntries) {
-            if (isFolderRow(entry)) {
-                // A rebuild hands back the children from the previous pass, folder rows included.
-                continue;
-            }
+        for (E entry : vanillaSnapshot) {
             String id = idOf(entry);
             if (id != null) {
                 vanillaById.putIfAbsent(id, entry);
@@ -149,6 +152,12 @@ public abstract class FolderListController<E> {
 
         repository.sync(List.copyOf(vanillaById.keySet()), complete);
         Folders.data().saveIfDirty(type);
+
+        return rebuildEntries();
+    }
+
+    /** Re-renders after an internal folder action without reconciling the filtered widget rows. */
+    public List<E> rebuildEntries() {
 
         rows = viewModel.layout(vanillaById.keySet());
 
@@ -181,7 +190,7 @@ public abstract class FolderListController<E> {
         // an entry that is the canonical one for its id was accounted for by the layout either way.
         // A second entry sharing an id -- two servers on one address -- is not represented in the
         // model at all, and is appended so it cannot disappear.
-        for (E entry : vanillaEntries) {
+        for (E entry : vanillaSnapshot) {
             if (isFolderRow(entry) || out.contains(entry)) {
                 continue;
             }
@@ -428,11 +437,8 @@ public abstract class FolderListController<E> {
 
     /** @return true if a drop happened and the vanilla release should be skipped */
     public boolean mouseReleased(double mouseX, double mouseY) {
-        boolean dropped = drag.release(mouseX, mouseY);
-        if (dropped) {
-            requestRebuild();
-        }
-        return dropped;
+        // Every accepting target persists and rebuilds exactly once from its drop method.
+        return drag.release(mouseX, mouseY);
     }
 
     public boolean isDropTarget(Folder folder) {
@@ -447,10 +453,21 @@ public abstract class FolderListController<E> {
     // ------------------------------------------------------------------
 
     public Folder createFolder() {
+        if (!canCreateFolder()) {
+            return null;
+        }
         Folder folder = repository.createFolder(Component.translatable("folders.default_name").getString());
+        requestRename(folder);
         afterModelChange();
-        beginRename(folder.id());
         return folder;
+    }
+
+    public boolean canCreateFolder() {
+        return renaming == null && !externalRenameInProgress();
+    }
+
+    protected boolean externalRenameInProgress() {
+        return false;
     }
 
     /** Opens or closes a folder, scrolling if the contents would open off-screen. */
@@ -480,8 +497,28 @@ public abstract class FolderListController<E> {
 
     public void deleteFolder(Folder folder) {
         // Contents go back to the root; no world, server or pack is touched.
+        if (folder.id().equals(renaming)) {
+            cancelRename();
+        }
         repository.deleteFolder(folder.id());
         afterModelChange();
+    }
+
+    /** Opens a vanilla confirmation screen; deleting a folder never deletes its contents. */
+    public void requestDeleteFolder(Folder folder) {
+        Minecraft minecraft = Minecraft.getInstance();
+        Screen previous = minecraft.gui.screen();
+        minecraft.gui.setScreen(new ConfirmScreen(confirmed -> {
+            if (confirmed) {
+                if (folder.id().equals(renaming)) {
+                    cancelRename();
+                }
+                repository.deleteFolder(folder.id());
+                Folders.data().saveIfDirty(type);
+            }
+            minecraft.gui.setScreen(previous);
+        }, Component.translatable("folders.delete.title"),
+                Component.translatable("folders.delete.message", folder.name())));
     }
 
     /**
@@ -615,7 +652,7 @@ public abstract class FolderListController<E> {
         items.add(FolderContextMenu.Item.of("folders.menu.rename", () -> requestRename(folder)));
         items.add(FolderContextMenu.Item.of("folders.menu.icon", () -> openIconMenu(folder, mouseX, mouseY)));
         items.addAll(typeMenuItems(folder));
-        items.add(FolderContextMenu.Item.of("folders.menu.delete", () -> deleteFolder(folder)));
+        items.add(FolderContextMenu.Item.of("folders.menu.delete", () -> requestDeleteFolder(folder)));
 
         showMenu(items, mouseX, mouseY);
     }

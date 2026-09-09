@@ -37,6 +37,10 @@ public final class FoldersListHooks {
         return controller.buildEntries(vanilla, complete);
     }
 
+    public static <E> List<E> cachedEntries(FolderListController<E> controller) {
+        return controller.rebuildEntries();
+    }
+
     /** Advances animations and refreshes drop targets. Call at the head of render. */
     public static void beforeRender(AbstractSelectionList<?> widget, FolderListController<?> controller) {
         // Scroll offset is passed as 0: AbstractSelectionList exposes setScrollAmount but no

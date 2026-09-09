@@ -190,7 +190,7 @@ modrinth {
     uploadFile = tasks.jar
     gameVersions = [project.minecraft_version]
     loaders = ["fabric"]
-    changelog = "Initial public release for Minecraft ${project.minecraft_version}."
+    changelog = """Fixes folder creation, preserves hidden items during internal redraws and world searches, moves controls into vanilla footer layouts, and adds confirmed folder deletion."""
     syncBodyFrom = rootProject.file("README.md").text
     dependencies {
         required.project "fabric-api"

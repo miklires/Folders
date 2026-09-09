@@ -32,21 +32,30 @@ public abstract class WorldSelectionListMixin implements FoldersControllerHost {
         if (folders$integration == null) {
             WorldSelectionList self = (WorldSelectionList) (Object) this;
             folders$integration = new WorldListIntegration(self,
-                    () -> folders$apply(self, true));
+                    () -> folders$applyCached(self));
         }
         return folders$integration;
     }
 
-    /** The saves are on screen, so the snapshot is complete and orphaned references can go. */
+    /**
+     * A non-empty search deliberately omits worlds, so it must never prune stored membership.
+     * Only the unfiltered list is a complete snapshot of the saves on disk.
+     */
     @Inject(method = "fillLevels", at = @At("TAIL"))
     private void folders$afterFillLevels(String search, List<LevelSummary> levels, CallbackInfo info) {
-        folders$apply((WorldSelectionList) (Object) this, true);
+        folders$apply((WorldSelectionList) (Object) this, search == null || search.isBlank());
     }
 
     @Unique
     private void folders$apply(WorldSelectionList self, boolean complete) {
         Folders.guarded("rebuilding the list", () ->
                 self.replaceEntries(FoldersListHooks.orderedEntries(self, folders$integration(), complete)));
+    }
+
+    @Unique
+    private void folders$applyCached(WorldSelectionList self) {
+        Folders.guarded("rebuilding the cached world list", () ->
+                self.replaceEntries(FoldersListHooks.cachedEntries(folders$integration())));
     }
 
     @Override

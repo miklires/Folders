@@ -11,6 +11,8 @@ import dev.miklires.folders.core.data.Folder;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.gui.layouts.LayoutElement;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
 import net.minecraft.network.chat.Component;
@@ -18,6 +20,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -50,22 +54,42 @@ public abstract class PackSelectionScreenMixin extends Screen {
     @Inject(method = "init", at = @At("TAIL"))
     private void folders$addControls(CallbackInfo info) {
         Folders.guarded("adding the Folders controls to the resource pack screen", () -> {
-            addRenderableWidget(CreateFolderButton.place(this));
-            addRenderableWidget(folders$profilesButton());
             folders$nameField = folders$buildNameField();
             addRenderableWidget(folders$nameField);
         });
     }
 
+    /** Inserts both permanent controls into the same vanilla footer row before it is arranged. */
+    @ModifyArg(method = "init", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/layouts/LinearLayout;addChild(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;",
+            ordinal = 3), index = 0)
+    private LayoutElement folders$resizeOpenFolderButton(LayoutElement element) {
+        if (element instanceof Button button) {
+            button.setWidth(100);
+        }
+        return element;
+    }
+
+    @Redirect(method = "init", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/layouts/LinearLayout;addChild(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;",
+            ordinal = 4))
+    private LayoutElement folders$addFooterControls(LinearLayout footer, LayoutElement doneButton) {
+        if (doneButton instanceof Button button) {
+            button.setWidth(100);
+        }
+        footer.addChild(CreateFolderButton.create(this, 0, 0, 100, 20));
+        footer.addChild(folders$profilesButton());
+        return footer.addChild(doneButton);
+    }
+
     @Unique
     private Button folders$profilesButton() {
-        Gutter.Slot slot = Gutter.slot(this, 1);
-        return Gutter.anchor(Button.builder(Component.translatable("folders.profile.button"), ignored -> Folders
+        return Button.builder(Component.translatable("folders.profile.button"), ignored -> Folders
                 .guarded("opening the pack profiles menu", () -> PackScreens.any()
                         .ifPresent(this::folders$openProfiles)))
-                .bounds(slot.x(), slot.y(), slot.width(), slot.height())
+                .bounds(0, 0, 100, 20)
                 .tooltip(Tooltip.create(Component.translatable("folders.profile.button.tooltip")))
-                .build(), 1, 0);
+                .build();
     }
 
     @Unique

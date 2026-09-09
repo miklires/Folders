@@ -182,7 +182,7 @@ public final class FolderEntryDelegate {
                 yield true;
             }
             case GLFW.GLFW_KEY_DELETE -> {
-                controller.deleteFolder(folder);
+                controller.requestDeleteFolder(folder);
                 yield true;
             }
             default -> false;

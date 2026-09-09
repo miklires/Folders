@@ -11,20 +11,13 @@ behaves exactly as it did before, with every world, server and pack where it was
 
 ## Status
 
-**The core is implemented and tested. All three screens are written against
-real 26.2 signatures.**
-
-`maven.fabricmc.net` and `libraries.minecraft.net` are blocked by the network
-policy where this was developed, so Gradle cannot resolve Loom or Minecraft here
-and nothing can be compiled against the real jar. What replaced guessing is the
-`dumpApi` task below: it runs `javap` over the exact remapped jar on a machine
-that *can* reach those hosts, and every signature this mod depends on was read
-out of that dump. Where a name still had to be inferred it is marked
-`MAPPING NOTE` and read in exactly one place.
+**The mod is compiled and tested against Minecraft 26.2.** A development launch
+also forces all three supported screen classes through Mixin at startup, so a
+stale injection point fails immediately instead of waiting for that screen to open.
 
 | Layer | State |
 |---|---|
-| `core/` — model, storage, identity, drag, animation, layout, profiles | Compiled and unit tested, 74 tests green |
+| `core/` — model, storage, identity, drag, animation, layout, profiles | Compiled and unit tested, 77 tests green |
 | Worlds, servers — rows, drag, rename, context menu | Written against real 26.2 signatures |
 | Resource packs — folders, profiles | Written against real 26.2 signatures |
 | Drag and drop, context menu clicks | Routed through `AbstractContainerWidget` |
@@ -46,6 +39,21 @@ out of that dump. Where a name still had to be inferred it is marked
 
 The online dot and count are back: 26.2 dropped `ServerData.online` but kept
 `ping`, which is what the dot actually means.
+
+## Using Folders
+
+The **Create folder** control is part of the normal footer button layout on the
+singleplayer, multiplayer and resource-pack screens. Creating another folder is
+blocked until the current name is accepted or cancelled, so a held or repeated
+click cannot create a stack of folders.
+
+- Left-click a folder to open or collapse it.
+- Double-click it or press `F2` to rename it; `Enter` accepts and `Esc` cancels.
+- Right-click a world, server or resource pack to move it into a folder.
+- Right-click a folder for rename, icon and delete actions.
+- Press `Delete` on a selected world/server folder to delete it. Deletion asks
+  for confirmation and returns every item to the main list; it never deletes a
+  world, server or pack.
 
 ---
 
@@ -214,9 +222,9 @@ entry needs its own timer. `AbstractSelectionListMixin` swaps vanilla's
 `index * itemHeight` for a lookup, but only on lists Folders has installed a
 layout on — every other list in the game takes an early return and is untouched.
 
-Animations run on elapsed wall time, 200 ms, ease-out-cubic. Retargeting
-mid-flight eases from the current value, so opening and immediately closing a
-folder does not snap.
+The core animation is elapsed-time based, ease-out-cubic, and covered by unit
+tests. The current 26.2 integration deliberately applies expansion instantly
+until variable-height rows can be driven without breaking hit testing.
 
 ### Drag versus click
 
@@ -286,29 +294,19 @@ retried every frame.
 
 ---
 
-## Mapping checklist
+## Compatibility checks
 
-What is left unverified, all of it flagged with `MAPPING NOTE`:
-
-| File | What to check |
-|---|---|
-| `integration/FolderEntryDelegate` | `KeyEvent.key()` and `CharacterEvent.codepoint()` — read in one method each, so a wrong guess is a two-line fix |
-| `mixin/client/AbstractSelectionListMixin` | `getRowTop` / `getMaxPosition`, and that vanilla's row top really is `contentTop + index * itemHeight` |
-| `ui/GuiCompat` | `enableScissor` / `disableScissor` on the extractor |
-
-Two things are known-wrong rather than unverified. `AbstractSelectionList.Entry`
-is protected, so the hit-testing injection had to go: during the ~200 ms a folder
-spends animating, a click is tested against vanilla's uniform row arithmetic and
-can land on the neighbouring row. And 26.2's pose stack is a `Matrix3x2fStack`,
-purely 2D, so there is no z-layer — the ghost preview and the context menu are on
-top only because they are drawn last.
+`dumpApi` records the exact local Minecraft signatures used by the integrations.
+In development, Folders also loads the multiplayer, singleplayer and
+resource-pack screen classes during startup; Mixin validates every required
+injection before the title screen is ready. Production builds skip this check.
 
 ---
 
 ## Not implemented
 
-Deliberate omissions: search, extra sort modes,
-nested folders, recently-used indicators, shift-drag quick move. Settings live
+Deliberate omissions: extra sort modes, nested folders, recently-used indicators,
+shift-drag quick move. Settings live
 behind the Mod Menu cog (YACL, `config/folders.json`).
 
 Root-level reordering of loose *items* by drag is not wired up either; dragging
