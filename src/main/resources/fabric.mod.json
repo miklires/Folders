@@ -3,7 +3,7 @@
   "id": "folders",
   "version": "${version}",
   "name": "Folders",
-  "description": "Folders for worlds, servers and resource packs, inside the vanilla screens. Drag a world, a server or a pack into a folder, rename it, give it an icon, open and close it with an animation that matches the rest of the game. Grouping lives in its own config file: saves, servers.dat and resourcepacks are never modified. Client-side only.",
+  "description": "Folders for worlds, servers, and resource packs inside the vanilla screens. Create, rename, delete, and organize folders while keeping saves, servers.dat, and resource packs untouched. Client-side only.",
   "authors": [
     "miklires"
   ],

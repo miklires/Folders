@@ -2,6 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'maven-publish'
     id 'com.modrinth.minotaur' version '2.9.0'
+    id 'net.darkhax.curseforgegradle' version '1.3.33'
 }
 
 version = project.mod_version
@@ -190,13 +191,40 @@ modrinth {
     uploadFile = tasks.jar
     gameVersions = [project.minecraft_version]
     loaders = ["fabric"]
-    changelog = """Fixes folder creation, preserves hidden items during internal redraws and world searches, moves controls into vanilla footer layouts, and adds confirmed folder deletion."""
+    changelog = """Adds verified CurseForge publishing metadata. Includes the folder creation, safe redraw/search handling, vanilla footer controls, and confirmed folder deletion fixes from 1.0.1."""
     syncBodyFrom = rootProject.file("README.md").text
     dependencies {
         required.project "fabric-api"
-        required.project "yacl"
+        embedded.project "yacl"
         optional.project "modmenu"
     }
 }
 
 tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
+
+def curseForgeToken = System.getenv("CURSEFORGE_TOKEN")
+def curseForgeProjectId = System.getenv("CURSEFORGE_PROJECT_ID")
+
+if (curseForgeToken && curseForgeProjectId) {
+    tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+        apiToken = curseForgeToken
+        def mainFile = upload(curseForgeProjectId, tasks.jar)
+        mainFile.displayName = "Folders ${project.version}"
+        mainFile.releaseType = "release"
+        mainFile.changelogType = "markdown"
+        mainFile.changelog = """Adds verified CurseForge publishing metadata. Includes the folder creation, safe redraw/search handling, vanilla footer controls, and confirmed folder deletion fixes from 1.0.1."""
+        mainFile.addGameVersion(project.minecraft_version)
+        mainFile.addModLoader("Fabric")
+        mainFile.addEnvironment("Client")
+        mainFile.addJavaVersion("Java 25")
+        mainFile.addRequirement("fabric-api")
+        mainFile.addEmbedded("yacl")
+        mainFile.addOptional("modmenu")
+    }
+} else {
+    tasks.register("publishCurseForge") {
+        doLast {
+            throw new GradleException("CURSEFORGE_TOKEN and CURSEFORGE_PROJECT_ID are required")
+        }
+    }
+}
