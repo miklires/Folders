@@ -1,6 +1,7 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'maven-publish'
+    id 'com.modrinth.minotaur' version '2.9.0'
 }
 
 version = project.mod_version
@@ -178,3 +179,24 @@ publishing {
     repositories {
     }
 }
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+    projectId = System.getenv("MODRINTH_PROJECT_ID")
+    versionNumber = project.version
+    versionName = "Folders ${project.version}"
+    versionType = "release"
+    // Loom 1.17 remaps the production artifact in the jar task.
+    uploadFile = tasks.jar
+    gameVersions = [project.minecraft_version]
+    loaders = ["fabric"]
+    changelog = "Initial public release for Minecraft ${project.minecraft_version}."
+    syncBodyFrom = rootProject.file("README.md").text
+    dependencies {
+        required.project "fabric-api"
+        required.project "yacl"
+        optional.project "modmenu"
+    }
+}
+
+tasks.modrinth.dependsOn(tasks.modrinthSyncBody)
