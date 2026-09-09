@@ -1,0 +1,34 @@
+name: Submit Modrinth project
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Complete metadata and submit for review
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          MODRINTH_PROJECT_ID: ${{ secrets.MODRINTH_PROJECT_ID }}
+        run: |
+          payload=$(jq -nc \
+            --arg source "https://github.com/$GITHUB_REPOSITORY" \
+            --arg issues "https://github.com/$GITHUB_REPOSITORY/issues" \
+            '{source_url:$source, issues_url:$issues, license_id:"MIT", requested_status:"approved"}')
+          curl --fail-with-body \
+            --request PATCH \
+            --header "Authorization: $MODRINTH_TOKEN" \
+            --header "Content-Type: application/json" \
+            --header "User-Agent: miklires-release-workflow/1.0" \
+            --data "$payload" \
+            "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT_ID"
+          curl --fail-with-body \
+            --header "Authorization: $MODRINTH_TOKEN" \
+            --header "User-Agent: miklires-release-workflow/1.0" \
+            "https://api.modrinth.com/v2/project/$MODRINTH_PROJECT_ID" \
+            | jq '{title, slug, status, requested_status, source_url, issues_url, license: .license.id}'
+
