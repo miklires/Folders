@@ -3,6 +3,7 @@ package dev.miklires.folders.client.ui;
 import dev.miklires.folders.Folders;
 import dev.miklires.folders.core.data.Folder;
 import dev.miklires.folders.core.data.FolderIcon;
+import dev.miklires.folders.core.storage.PngHeaderValidator;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -13,7 +14,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -40,7 +40,7 @@ public final class IconManager {
     public static final int MAX_DIMENSION = 1024;
 
     private static final Map<String, Identifier> CACHE = new ConcurrentHashMap<>();
-    private static final Map<String, Boolean> FAILED = new HashMap<>();
+    private static final Map<String, Boolean> FAILED = new ConcurrentHashMap<>();
 
     private IconManager() {
     }
@@ -69,12 +69,7 @@ public final class IconManager {
         }
         Path path = Folders.data().storage().iconDirectory().resolve(file);
         try {
-            if (!Files.isRegularFile(path)) {
-                throw new IOException("no such icon file");
-            }
-            if (Files.size(path) > MAX_FILE_BYTES) {
-                throw new IOException("icon is larger than " + MAX_FILE_BYTES + " bytes");
-            }
+            PngHeaderValidator.validate(path, MAX_FILE_BYTES, MAX_DIMENSION);
             NativeImage image;
             try (InputStream in = Files.newInputStream(path)) {
                 image = NativeImage.read(in);
@@ -106,15 +101,10 @@ public final class IconManager {
     public static FolderIcon importIcon(UUID folderId, Path source) {
         String fileName = folderId + ".png";
         try {
-            if (!Files.isRegularFile(source)) {
-                throw new IOException("not a file");
-            }
-            if (Files.size(source) > MAX_FILE_BYTES) {
-                throw new IOException("larger than " + MAX_FILE_BYTES + " bytes");
-            }
             if (!source.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".png")) {
                 throw new IOException("not a .png");
             }
+            PngHeaderValidator.validate(source, MAX_FILE_BYTES, MAX_DIMENSION);
             // Decode before committing, so an unusable image never reaches the config.
             try (InputStream in = Files.newInputStream(source)) {
                 NativeImage probe = NativeImage.read(in);
