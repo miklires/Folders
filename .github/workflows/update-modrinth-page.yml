@@ -111,7 +111,7 @@ jobs:
             exit 1
           fi
 
-          jq -n --rawfile body modrinth-description.md --arg title "$PROJECT_NAME" --arg description "$SUMMARY" --arg source "$source_url" --arg issues "$source_url/issues" --arg license "$LICENSE_ID" --arg license_url "$LICENSE_URL" --arg wiki "$WIKI_URL" --arg discord "https://discord.gg/pes25cnWKy" --arg support "https://miklires.su/support/" --argjson categories "$CATEGORIES" --argjson additional "$ADDITIONAL_CATEGORIES" '{title:$title,description:$description,body:$body,categories:$categories,additional_categories:$additional,source_url:$source,issues_url:$issues,license_id:$license,license_url:(if $license_url == "" then null else $license_url end),wiki_url:(if $wiki == "" then null else $wiki end),discord_url:$discord,donation_urls:[{id:"other",platform:"Other",url:$support}],requested_status:"approved"}' > modrinth-project.json
+          jq -n --rawfile body modrinth-description.md --arg title "$PROJECT_NAME" --arg description "$SUMMARY" --arg source "$source_url" --arg issues "$source_url/issues" --arg license "$LICENSE_ID" --arg license_url "$LICENSE_URL" --arg wiki "$WIKI_URL" --arg discord "https://discord.gg/pes25cnWKy" --arg support "https://miklires.su/support/" --argjson categories "$CATEGORIES" --argjson additional "$ADDITIONAL_CATEGORIES" '{title:$title,description:$description,body:$body,categories:$categories,additional_categories:$additional,client_side:"required",server_side:"unsupported",source_url:$source,issues_url:$issues,license_id:$license,license_url:(if $license_url == "" then null else $license_url end),wiki_url:(if $wiki == "" then null else $wiki end),discord_url:$discord,donation_urls:[{id:"other",platform:"Other",url:$support}],requested_status:"approved"}' > modrinth-project.json
 
           curl --fail-with-body --silent --show-error --request PATCH --header "$auth" --header "$agent" --header "Content-Type: application/json" --data-binary @modrinth-project.json "$api/project/$project_id"
 
@@ -138,6 +138,7 @@ jobs:
               "title": os.environ["PROJECT_NAME"], "description": os.environ["SUMMARY"],
               "categories": json.loads(os.environ["CATEGORIES"]),
               "additional_categories": json.loads(os.environ["ADDITIONAL_CATEGORIES"]),
+              "client_side": "required", "server_side": "unsupported",
               "source_url": source, "issues_url": source + "/issues",
               "discord_url": "https://discord.gg/pes25cnWKy",
           }
