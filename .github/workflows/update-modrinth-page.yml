@@ -22,7 +22,7 @@ jobs:
           ADDITIONAL_CATEGORIES: '[]'
           PLATFORMS: 'fabric'
           BSTATS_ID: ''
-          LICENSE_ID: 'ARR'
+          LICENSE_ID: 'LicenseRef-All-Rights-Reserved'
           LICENSE_URL: ''
           WIKI_URL: ''
         run: |
@@ -39,18 +39,7 @@ jobs:
             echo "Modrinth project not found for $PROJECT_NAME" >&2
             exit 1
           fi
-          curl --fail-with-body --silent --show-error --header "$auth" --header "$agent" --dump-header current-headers.txt --output current-project.json "$api/project/$project_id"
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          data = Path("current-project.json").read_bytes()
-          content_type = next((line for line in Path("current-headers.txt").read_text(encoding="utf-8").splitlines() if line.lower().startswith("content-type:")), "content-type: missing")
-          print(f"Modrinth GET: {content_type}; bytes={len(data)}; prefix={data[:12].hex()}")
-          try:
-              json.loads(data)
-          except json.JSONDecodeError as error:
-              print(f"JSON decode error: line={error.lineno}; column={error.colno}; position={error.pos}; message={error.msg}")
-          PY
+          curl --fail-with-body --silent --show-error --header "$auth" --header "$agent" --output current-project.json "$api/project/$project_id"
           export PROJECT_SLUG="$(python - <<'PY'
           import json
           import os
