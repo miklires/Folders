@@ -51,8 +51,15 @@ jobs:
           except json.JSONDecodeError as error:
               print(f"JSON decode error: line={error.lineno}; column={error.colno}; position={error.pos}; message={error.msg}")
           PY
-          jq -e --arg expected "$PROJECT_NAME" '(.title | ascii_downcase) == ($expected | ascii_downcase)' current-project.json >/dev/null
-          export PROJECT_SLUG="$(jq -r '.slug' current-project.json)"
+          export PROJECT_SLUG="$(python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          project = json.loads(Path("current-project.json").read_bytes())
+          assert project["title"].casefold() == os.environ["PROJECT_NAME"].casefold()
+          print(project["slug"])
+          PY
+          )"
           export REPO_NAME="$repo_name"
 
           python - <<'PY'
@@ -132,11 +139,32 @@ jobs:
           curl --fail-with-body --silent --show-error --request PATCH --header "$auth" --header "$agent" --header "Content-Type: application/json" --data-binary @modrinth-disclosures.json "$api_v3/project/$project_id/disclosures"
 
           curl --fail-with-body --silent --show-error --header "$auth" --header "$agent" --output saved-project.json "$api/project/$project_id"
-          jq -e --arg title "$PROJECT_NAME" --arg description "$SUMMARY" --arg source "$source_url" --arg issues "$source_url/issues" --arg wiki "$WIKI_URL" --arg license "$LICENSE_ID" --argjson categories "$CATEGORIES" --argjson additional "$ADDITIONAL_CATEGORIES" 'select(.title == $title and .description == $description and .categories == $categories and .additional_categories == $additional and .source_url == $source and .issues_url == $issues and .discord_url == "https://discord.gg/pes25cnWKy" and .license.id == $license and (.icon_url != null) and ((.body | length) > 200) and (.body | startswith("<div align=\"center\">")) and (.body | contains("mcolor-icon") | not) and (if $wiki == "" then .wiki_url == null else .wiki_url == $wiki end)) | {id,slug,title,description,status,requested_status,categories,additional_categories,source_url,issues_url,wiki_url,discord_url,donation_urls,icon_url,body_length:(.body | length)}' saved-project.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          project = json.loads(Path("saved-project.json").read_bytes())
+          source = f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}'
+          expected = {
+              "title": os.environ["PROJECT_NAME"], "description": os.environ["SUMMARY"],
+              "categories": json.loads(os.environ["CATEGORIES"]),
+              "additional_categories": json.loads(os.environ["ADDITIONAL_CATEGORIES"]),
+              "source_url": source, "issues_url": source + "/issues",
+              "discord_url": "https://discord.gg/pes25cnWKy",
+          }
+          for key, value in expected.items():
+              assert project.get(key) == value, (key, project.get(key), value)
+          assert project.get("license", {}).get("id") == os.environ["LICENSE_ID"]
+          assert project.get("icon_url")
+          assert len(project.get("body", "")) > 200
+          assert project["body"].startswith('<div align="center">')
+          assert "mcolor-icon" not in project["body"]
+          print(json.dumps({key: project.get(key) for key in ("id", "slug", "title", "description", "status", "requested_status", "icon_url")}, ensure_ascii=False))
+          PY
 
           curl --fail-with-body --silent --show-error --header "$auth" --header "$agent" --output saved-disclosures.json "$api_v3/project/$project_id/disclosures"
           if [ -n "$BSTATS_ID" ]; then
-            jq -e '.disclosures | any(.type == "telemetry" and .consent == "opt_out")' saved-disclosures.json >/dev/null
+            python -c 'import json; d=json.load(open("saved-disclosures.json")); assert any(x.get("type") == "telemetry" and x.get("consent") == "opt_out" for x in d["disclosures"])'
           else
-            jq -e '.disclosures | all(.type != "telemetry")' saved-disclosures.json >/dev/null
+            python -c 'import json; d=json.load(open("saved-disclosures.json")); assert all(x.get("type") != "telemetry" for x in d["disclosures"])'
           fi
