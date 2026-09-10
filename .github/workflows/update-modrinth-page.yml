@@ -39,7 +39,13 @@ jobs:
             echo "Modrinth project not found for $PROJECT_NAME" >&2
             exit 1
           fi
-          curl --fail-with-body --silent --show-error --header "$auth" --header "$agent" --output current-project.json "$api/project/$project_id"
+          curl --fail-with-body --silent --show-error --header "$auth" --header "$agent" --dump-header current-headers.txt --output current-project.json "$api/project/$project_id"
+          python - <<'PY'
+          from pathlib import Path
+          data = Path("current-project.json").read_bytes()
+          content_type = next((line for line in Path("current-headers.txt").read_text(encoding="utf-8").splitlines() if line.lower().startswith("content-type:")), "content-type: missing")
+          print(f"Modrinth GET: {content_type}; bytes={len(data)}; prefix={data[:12].hex()}")
+          PY
           jq -e --arg expected "$PROJECT_NAME" '(.title | ascii_downcase) == ($expected | ascii_downcase)' current-project.json >/dev/null
           export PROJECT_SLUG="$(jq -r '.slug' current-project.json)"
           export REPO_NAME="$repo_name"
