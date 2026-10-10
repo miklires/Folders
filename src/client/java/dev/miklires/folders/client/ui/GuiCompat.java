@@ -12,7 +12,7 @@ import net.minecraft.util.FormattedCharSequence;
 /**
  * Every drawing primitive the mod uses, in one place.
  *
- * <p>26.2 draws through {@link GuiGraphicsExtractor}: widgets extract a render state rather than
+ * <p>26.3 draws through {@link GuiGraphicsExtractor}: widgets extract a render state rather than
  * issuing draw calls, and the signatures moved with it. Routing the whole mod through the handful
  * of methods below means the next time that happens it is one file to fix rather than a hunt
  * through the renderer, the entries and the context menu.
@@ -20,7 +20,7 @@ import net.minecraft.util.FormattedCharSequence;
  * <p>No raw OpenGL here or anywhere else in the mod — everything goes through the extractor and
  * {@link RenderPipelines}.
  *
- * <p>There is no depth helper: 26.2's pose stack is a {@code Matrix3x2fStack}, purely 2D, so
+ * <p>There is no depth helper: 26.3's pose stack is a {@code Matrix3x2fStack}, purely 2D, so
  * "on top" means "submitted later". The ghost preview and the context menu are drawn at the tail of
  * the list's render for that reason.
  */

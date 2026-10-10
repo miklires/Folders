@@ -24,6 +24,7 @@ bin/
 # fabric
 run/
 remappedSrc/
+logs/
 
 # local verification scratch (see README, "Verifying the core")
 .verify/

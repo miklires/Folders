@@ -9,7 +9,7 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 /**
  * Everything a folder row does, independent of which list it is in.
@@ -109,7 +109,7 @@ public final class FolderEntryDelegate {
     // ------------------------------------------------------------------
 
     /**
-     * @param click          26.2 hands the whole event across, including whether this was the
+     * @param click          26.3 hands the whole event across, including whether this was the
      *                       second click of a pair, so the rename gesture needs no timer of its own
      * @param rowX,rowY      where the row was placed, to tell the icon area from the name
      * @param viewportBottom bottom of the list, so opening near the edge can scroll
@@ -122,11 +122,11 @@ public final class FolderEntryDelegate {
             return true;
         }
 
-        if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
             controller.openContextMenu(folder, (int) click.x(), (int) click.y());
             return true;
         }
-        if (click.button() != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (click.button() != InputConstants.MOUSE_BUTTON_LEFT) {
             return false;
         }
 
@@ -155,7 +155,7 @@ public final class FolderEntryDelegate {
     // ------------------------------------------------------------------
 
     /**
-     * MAPPING NOTE: {@code KeyEvent} and {@code CharacterEvent} are 26.2's replacement for the old
+     * MAPPING NOTE: {@code KeyEvent} and {@code CharacterEvent} are 26.3's replacement for the old
      * loose {@code (keyCode, scanCode, modifiers)} triples. Their accessors are read in exactly one
      * place each, here, so a wrong guess is a two-line fix.
      */
@@ -173,15 +173,15 @@ public final class FolderEntryDelegate {
             return renameKeyPressed(key);
         }
         return switch (key) {
-            case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
+            case InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 controller.toggle(folder, viewportBottom);
                 yield true;
             }
-            case GLFW.GLFW_KEY_F2 -> {
+            case InputConstants.KEY_F2 -> {
                 controller.beginRename(folder.id());
                 yield true;
             }
-            case GLFW.GLFW_KEY_DELETE -> {
+            case InputConstants.KEY_DELETE -> {
                 controller.requestDeleteFolder(folder);
                 yield true;
             }
@@ -191,19 +191,19 @@ public final class FolderEntryDelegate {
 
     private boolean renameKeyPressed(int key) {
         switch (key) {
-            case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER -> {
+            case InputConstants.KEY_RETURN, InputConstants.KEY_NUMPADENTER -> {
                 // An empty name is refused and the field stays open.
                 if (controller.commitRename(folder.id(), buffer().toString())) {
                     discardBuffer();
                 }
                 return true;
             }
-            case GLFW.GLFW_KEY_ESCAPE -> {
+            case InputConstants.KEY_ESCAPE -> {
                 controller.cancelRename();
                 discardBuffer();
                 return true;
             }
-            case GLFW.GLFW_KEY_BACKSPACE -> {
+            case InputConstants.KEY_BACKSPACE -> {
                 StringBuilder text = buffer();
                 if (!text.isEmpty()) {
                     text.deleteCharAt(text.length() - 1);

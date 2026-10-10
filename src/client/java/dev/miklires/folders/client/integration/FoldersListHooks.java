@@ -22,7 +22,7 @@ public final class FoldersListHooks {
      * Works out the entries a list should hold, in display order.
      *
      * <p>The caller applies them with {@code replaceEntries}, which is the only supported way to
-     * swap a list's contents: 26.2 positions rows by walking them and accumulating heights, and
+     * swap a list's contents: 26.3 positions rows by walking them and accumulating heights, and
      * that pass only runs from the list's own mutators. Editing {@code children()} in place leaves
      * every row where the previous layout put it.
      *

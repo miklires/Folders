@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
  * {@link FolderEntryDelegate}; this class only exists to be the entry type the vanilla widget
  * expects, which is what keeps the mod off any one entry API.
  *
- * <p>26.2 hands rows no bounds: the list has already placed the entry by the time it draws, so the
+ * <p>26.3 hands rows no bounds: the list has already placed the entry by the time it draws, so the
  * geometry is read back off {@code this}. That is why nothing here caches a position between the
  * draw and the click.
  */

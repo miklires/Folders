@@ -11,21 +11,21 @@ behaves exactly as it did before, with every world, server and pack where it was
 
 ## Status
 
-**The mod is compiled and tested against Minecraft 26.2.** A development launch
+**The mod is compiled and tested against Minecraft 26.3.** A development launch
 also forces all three supported screen classes through Mixin at startup, so a
 stale injection point fails immediately instead of waiting for that screen to open.
 
 | Layer | State |
 |---|---|
 | `core/` — model, storage, identity, drag, animation, layout, profiles | Compiled and unit tested, 77 tests green |
-| Worlds, servers — rows, drag, rename, context menu | Written against real 26.2 signatures |
-| Resource packs — folders, profiles | Written against real 26.2 signatures |
+| Worlds, servers — rows, drag, rename, context menu | Written against real 26.3 signatures |
+| Resource packs — folders, profiles | Written against real 26.3 signatures |
 | Drag and drop, context menu clicks | Routed through `AbstractContainerWidget` |
 | Textures, translations, manifests | Present |
 
 ### What is switched off, and why
 
-- **The expand animation.** 26.2's `AbstractSelectionList` positions rows itself
+- **The expand animation.** 26.3's `AbstractSelectionList` positions rows itself
   (`getNextY`, `repositionEntries`) and has no `getMaxPosition` to override, so
   the accordion has to drive each entry's own height instead of the list's
   arithmetic. Until then folders open and close instantly. The animation code in
@@ -37,7 +37,7 @@ stale injection point fails immediately instead of waiting for that screen to op
   drop against. Right-clicking a pack files it, which is the same gesture the
   other two screens offer.
 
-The online dot and count are back: 26.2 dropped `ServerData.online` but kept
+The online dot and count are back: 26.3 dropped `ServerData.online` but kept
 `ping`, which is what the dot actually means.
 
 ## Using Folders
@@ -70,8 +70,8 @@ version that Gradle 9.0 rejects outright, and the failure reads as an
 unresolvable artifact rather than a version mismatch. In IntelliJ, set
 *Build tools → Gradle → Use Gradle from: gradle-wrapper.properties*.
 
-Versions in `gradle.properties` match ChatUtils: Minecraft `26.2`, loader
-`0.19.3`, Fabric API `0.155.2+26.2`, Loom `1.17-SNAPSHOT`, Java 25, Mojang
+Versions in `gradle.properties` match ChatUtils: Minecraft `26.3`, loader
+`0.19.3`, Fabric API `0.155.2+26.3`, Loom `1.17-SNAPSHOT`, Java 25, Mojang
 mappings (no `mappings` dependency — Loom defaults to them).
 
 The Gradle JVM should be 21 or newer; the Java 25 toolchain is fetched by
@@ -147,7 +147,7 @@ to frame rate) are all exercised by `tools/verify-core.sh` in under half a
 second, with no game and no mappings.
 
 **Every version-sensitive call is funnelled through `client/ui/GuiCompat`.**
-26.2 draws through `GuiGraphicsExtractor` — widgets extract a render state
+26.3 draws through `GuiGraphicsExtractor` — widgets extract a render state
 instead of issuing draw calls — and the signatures moved with it. A dozen methods
 there carry the whole mod's rendering, so the next time that happens it is a
 one-file fix rather than a hunt through the renderer, the entries and the menu.
@@ -223,7 +223,7 @@ entry needs its own timer. `AbstractSelectionListMixin` swaps vanilla's
 layout on — every other list in the game takes an early return and is untouched.
 
 The core animation is elapsed-time based, ease-out-cubic, and covered by unit
-tests. The current 26.2 integration deliberately applies expansion instantly
+tests. The current 26.3 integration deliberately applies expansion instantly
 until variable-height rows can be driven without breaking hit testing.
 
 ### Drag versus click
@@ -313,7 +313,7 @@ Root-level reordering of loose *items* by drag is not wired up either; dragging
 between folders and the root is, and ordering *inside* a folder is. The data
 model already supports it. An item dragged out of a folder is appended to the
 root rather than dropped at the pointer, because working out which root slot a y
-belongs to needs the list's scroll offset and 26.2 exposes a setter for it but no
+belongs to needs the list's scroll offset and 26.3 exposes a setter for it but no
 getter this mod has found yet.
 
 ## Layout on disk

@@ -67,7 +67,7 @@ public final class ServerListIntegration extends FolderListController<ServerSele
     /**
      * Whether a server answered its last ping.
      *
-     * <p>26.2 dropped the {@code online} flag but kept {@code ping}, which is what the dot actually
+     * <p>26.3 dropped the {@code online} flag but kept {@code ping}, which is what the dot actually
      * means: a round trip completed. It stays 0 until a status response arrives and goes negative
      * when one fails, so a positive value is the honest test.
      */

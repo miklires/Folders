@@ -74,7 +74,7 @@ public abstract class FolderListController<E> {
         this.type = type;
         this.repository = Folders.repository(type);
         // Expansion is applied instantly for now. The accordion needs per-row heights, and
-        // AbstractSelectionList positions rows itself in 26.2 -- animating them means driving the
+        // AbstractSelectionList positions rows itself in 26.3 -- animating them means driving the
         // entry's own height rather than overriding the list's arithmetic, which is the next piece
         // of work. Half an animation with fixed row heights would just look broken.
         this.viewModel = new FolderViewModel(repository, baseMs -> 0L);
@@ -403,7 +403,7 @@ public abstract class FolderListController<E> {
                 return;
             }
             // Appended rather than dropped at the pointer: working out which root slot a y belongs
-            // to needs the list's scroll offset, and 26.2 exposes a setter for it but no getter yet.
+            // to needs the list's scroll offset, and 26.3 exposes a setter for it but no getter yet.
             // An item that lands in a predictable place beats one that lands in the wrong place.
             repository.moveToRoot(item.itemId(), -1);
             afterModelChange();

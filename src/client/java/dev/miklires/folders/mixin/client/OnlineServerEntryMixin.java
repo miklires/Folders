@@ -4,7 +4,7 @@ import dev.miklires.folders.Folders;
 import dev.miklires.folders.client.integration.ScreenFolders;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.input.MouseButtonEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,13 +22,13 @@ public abstract class OnlineServerEntryMixin {
                                   CallbackInfoReturnable<Boolean> info) {
         ServerSelectionList.Entry self = (ServerSelectionList.Entry) (Object) this;
 
-        if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             // Arms the drag and returns without cancelling, so the click carries on to vanilla.
             Folders.guarded("beginning a drag", () -> ScreenFolders.current()
                     .ifPresent(controller -> controller.pressVanilla(self, click.x(), click.y())));
             return;
         }
-        if (click.button() != GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (click.button() != InputConstants.MOUSE_BUTTON_RIGHT) {
             return;
         }
         Folders.guarded("opening the move-to-folder menu", () ->

@@ -8,7 +8,7 @@ import dev.miklires.folders.client.integration.pack.PackScreens;
 import dev.miklires.folders.core.data.Folder;
 import net.minecraft.client.gui.screens.packs.TransferableSelectionList;
 import net.minecraft.client.input.MouseButtonEvent;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -44,7 +44,7 @@ public abstract class PackEntryMixin {
                 folders$folderClick(folderId, click, info);
                 return;
             }
-            if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            if (click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
                 folders$moveMenu(click, info);
             }
         });
@@ -65,9 +65,9 @@ public abstract class PackEntryMixin {
         if (folder.isEmpty()) {
             return;
         }
-        if (click.button() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+        if (click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
             controller.openContextMenu(folder.get(), (int) click.x(), (int) click.y());
-        } else if (click.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+        } else if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             controller.toggle(folder.get(), controller.widget().getBottom());
         }
         info.setReturnValue(true);

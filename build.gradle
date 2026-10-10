@@ -33,9 +33,9 @@ dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    implementation "maven.modrinth:yacl:3.9.5+26.2-fabric"
-    include "maven.modrinth:yacl:3.9.5+26.2-fabric"
-    implementation "maven.modrinth:modmenu:20.0.1"
+    implementation "maven.modrinth:yacl:3.9.7+26.3-fabric"
+    include "maven.modrinth:yacl:3.9.7+26.3-fabric"
+    implementation "maven.modrinth:modmenu:21.0.0"
 
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
@@ -191,7 +191,7 @@ modrinth {
     uploadFile = tasks.jar
     gameVersions = [project.minecraft_version]
     loaders = ["fabric"]
-    changelog = """Adds verified CurseForge publishing metadata. Includes the folder creation, safe redraw/search handling, vanilla footer controls, and confirmed folder deletion fixes from 1.0.1."""
+    changelog = """Adds Minecraft 26.3 compatibility, migrates mouse and keyboard handling from GLFW to Minecraft's SDL-backed input API, and replaces the removed tinyfd chooser with SDL's native file dialog."""
     syncBodyFrom = rootProject.file("README.md").text
     dependencies {
         required.project "fabric-api"
@@ -212,7 +212,7 @@ if (curseForgeToken && curseForgeProjectId) {
         mainFile.displayName = "Folders ${project.version}"
         mainFile.releaseType = "release"
         mainFile.changelogType = "markdown"
-        mainFile.changelog = """Adds verified CurseForge publishing metadata. Includes the folder creation, safe redraw/search handling, vanilla footer controls, and confirmed folder deletion fixes from 1.0.1."""
+        mainFile.changelog = """Adds Minecraft 26.3 compatibility, migrates mouse and keyboard handling from GLFW to Minecraft's SDL-backed input API, and replaces the removed tinyfd chooser with SDL's native file dialog."""
         mainFile.addGameVersion(project.minecraft_version)
         mainFile.addModLoader("Fabric")
         mainFile.addEnvironment("Client")
